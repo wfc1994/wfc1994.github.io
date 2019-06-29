@@ -353,7 +353,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/29/看书笔记/深入理解Java虚拟机/1、Java内存区域与内存溢出异常/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/29/看书笔记/深入理解Java虚拟机/3、判断对象是否存活/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Wfc">
@@ -373,7 +373,7 @@
           <h1 class="post-title" itemprop="name headline">
                 
                 
-                <a href="/2019/06/29/看书笔记/深入理解Java虚拟机/1、Java内存区域与内存溢出异常/" class="post-title-link" itemprop="url">Java内存区域与内存溢出异常</a>
+                <a href="/2019/06/29/看书笔记/深入理解Java虚拟机/3、判断对象是否存活/" class="post-title-link" itemprop="url">3、判断对象是否存活</a>
               
             
           </h1>
@@ -398,7 +398,257 @@
                 
               
 
-              <time title="创建时间：2019-06-29 23:28:45 / 修改时间：23:27:11" itemprop="dateCreated datePublished" datetime="2019-06-29T23:28:45+08:00">2019-06-29</time>
+              <time title="创建时间：2019-06-29 23:37:15 / 修改时间：23:36:53" itemprop="dateCreated datePublished" datetime="2019-06-29T23:37:15+08:00">2019-06-29</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/" itemprop="url" rel="index"><span itemprop="name">看书笔记</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/深入理解Java虚拟机/" itemprop="url" rel="index"><span itemprop="name">深入理解Java虚拟机</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="1-判断方式与方法"><a href="#1-判断方式与方法" class="headerlink" title="1. 判断方式与方法"></a>1. 判断方式与方法</h2><p>垃圾收集器对 Java堆里的对象 是否进行回收的判断准则：</p>
+<p>Java对象是存活 or 死亡：判断对象为死亡才会进行回收</p>
+<p>在Java虚拟机中，判断对象是否存活有2种方法：</p>
+<ul>
+<li>引用计数法</li>
+<li>引用链法（可达性分析法）</li>
+</ul>
+<h3 id="1-1-引用计数法"><a href="#1-1-引用计数法" class="headerlink" title="1.1. 引用计数法"></a>1.1. 引用计数法</h3><h4 id="方法描述"><a href="#方法描述" class="headerlink" title="方法描述"></a>方法描述</h4><p>给 Java 对象添加一个引用计数器，每当有一个地方引用它时，计数器 +1；引用失效则 -1；</p>
+<h4 id="判断对象存活准则"><a href="#判断对象存活准则" class="headerlink" title="判断对象存活准则"></a>判断对象存活准则</h4><p>当计数器不为 0 时，判断该对象存活；否则判断为死亡（计数器 = 0）。</p>
+<h4 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h4><p>实现简单、判断高效</p>
+<h4 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h4><p>无法解决对象间<strong>相互循环引用</strong>的问题 : 即该算法存在判断逻辑的漏洞</p>
+<p>背景</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// 对象objA 和 objB 都有字段 name</span><br><span class="line">// 两个对象相互进行引用，除此之外这两个人对象没有任何引用</span><br><span class="line">objA.name = objB；</span><br><span class="line">objB.name = objA；</span><br></pre></td></tr></table></figure>
+
+<p>问题</p>
+<p>实际上这两个对象已经不可能再被访问，应该要被垃圾收集器进行回收</p>
+<p>但因为他们相互引用，所以导致计数器不为0，这导致引用计数算法无法通知垃圾收集器回收该两个对象</p>
+<p>++正由于该算法存在判断逻辑漏洞，所以Java虚拟机没有采用该算法判断Java是否存活。++</p>
+<h3 id="2-2、引用链法（可达性分析法）"><a href="#2-2、引用链法（可达性分析法）" class="headerlink" title="2.2、引用链法（可达性分析法）"></a>2.2、引用链法（可达性分析法）</h3><p>很多主流商用语言（如Java、C#）都采用引用链法判断Java对象是否存活。</p>
+<p>含3个步骤：</p>
+<ol>
+<li>可达性分</li>
+<li>析第一次标记 &amp; 筛选</li>
+<li>第二次标记 &amp; 筛选</li>
+</ol>
+<h4 id="2-2-1-可达性分析"><a href="#2-2-1-可达性分析" class="headerlink" title="2.2.1 可达性分析"></a>2.2.1 可达性分析</h4><p>方法描述</p>
+<p>将一系列的 GC Roots 对象作为起点，从这些起点开始向下搜索。</p>
+<p>可作为 GC Root 的对象有：</p>
+<ul>
+<li>Java虚拟机栈（栈帧的本地变量表）中引用的对象</li>
+<li>本地方法栈 中 JNI引用对象</li>
+<li>方法区 中常量、类静态属性引用的对象</li>
+</ul>
+<p>Java 进行GC的时候会从GC root进行可达性判断，常见的GC Root有如下：</p>
+<ol>
+<li>Class - 由系统类加载器(system class loader)加载的对象，这些类是不能够被回收的，他们可以以静态字段的方式保存持有其它对象。我们需要注意的一点就是，通过用户自定义的类加载器加载的类，除非相应的java.lang.Class实例以其它的某种（或多种）方式成为roots，否则它们并不是roots，.</li>
+<li>Thread - 活着的线程</li>
+<li>Stack Local - Java方法的local变量或参数</li>
+<li>JNI Local - JNI方法的local变量或参数</li>
+<li>JNI Global - 全局JNI引用</li>
+<li>Monitor Used - 用于同步的监控对象</li>
+<li>Held by JVM - 用于JVM特殊目的由GC保留的对象，但实际上这个与JVM的实现是有关的。可能已知的一些类型是：系统类加载器、一些JVM知道的重要的异常类、一些用于处理异常的预分配对象以及一些自定义的类加载器等。然而，JVM并没有为这些对象提供其它的信息，因此需要去确定哪些是属于”JVM持有”的了。</li>
+</ol>
+<p>向下搜索的路径 = 引用链</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%9B%98%E5%AF%B9%E5%AF%B9%E8%B1%A1%E6%98%AF%E5%90%A6%E5%AD%98%E6%B4%BB1.png" alt></p>
+<p><strong>判断对象是否可达标准</strong></p>
+<p>当一个对象到 GC Roots没有任何引用链相连时，则判断该对象不可达，比如上图右边的形式。</p>
+<p>没有任何引用链相连 = GC Root到对象不可达 = 对象不可用</p>
+<p><strong>注意：Java9中已经明确弃用了finalize方法</strong></p>
+<p>为什么呢？简单说，你无法保证finalize什么时候执行，执行的是否符合预期。使用不当会影响 性能，导致程序死锁、挂起等。千万不要指望 finalize 去承担资源释放的主要职责，多让finalize作为后的“守门员”（也就是如下的行为两次标记筛选）</p>
+<p>++可达性分析 仅仅只是判断对象是否可达，但还不足以判断对象是否存活 / 死亡，++<br>当在 可达性分析 中判断不可达的对象，只是“被判刑” = 还没真正死亡<br>不可达对象会被放在”即将回收“的集合里。</p>
+<p>要判断一个对象真正死亡，还需要经历两个阶段：</p>
+<p>第一次标记 &amp; 筛选 finalize方法存在</p>
+<p>第二次标记 &amp; 筛选</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%88%A4%E6%96%AD%E5%AF%B9%E8%B1%A1%E6%98%AF%E5%90%A6%E5%AD%98%E6%B4%BB2.png" alt></p>
+<h4 id="2-2-2-第一次标记-amp-筛选"><a href="#2-2-2-第一次标记-amp-筛选" class="headerlink" title="2.2.2 第一次标记 &amp; 筛选"></a>2.2.2 第一次标记 &amp; 筛选</h4><p>对象在可达性分析中被判断为不可达后，会被第一次标记 &amp; 准备被筛选</p>
+<p>方法描述</p>
+<ol>
+<li>不筛选：继续留在 ”即将回收“的集合里，等待回收；</li>
+<li>筛选：从 ”即将回收“的集合取出</li>
+</ol>
+<p>筛选标准</p>
+<ul>
+<li>该对象是否有必要执行 finalize()方法</li>
+<li>若有必要执行（人为设置），则筛选出来，进入下一阶段（第二次标记 &amp; 筛选）；</li>
+<li>若没必要执行，判断该对象死亡，不筛选 并等待回收</li>
+<li>当对象无 finalize()方法 或 finalize()已被虚拟机调用过，则视为“没必要执行”</li>
+</ul>
+<h4 id="2-2-3-第二次标记-amp-筛选"><a href="#2-2-3-第二次标记-amp-筛选" class="headerlink" title="2.2.3 第二次标记 &amp; 筛选"></a>2.2.3 第二次标记 &amp; 筛选</h4><p>当对象经过了第一次的标记 &amp; 筛选，会被进行第二次标记 &amp; 准备被进行 筛选</p>
+<p>方法描述</p>
+<p>该对象会被放到一个 F-Queue 队列中，并由 虚拟机自动建立、优先级低的Finalizer 线程去执行 队列中该对象的finalize()，finalize()只会被执行一次，但并不承诺等待finalize()运行结束。这是为了防止 finalize()执行缓慢 / 停止 使得 F-Queue队列其他对象永久等待。</p>
+<p>筛选标准</p>
+<p>在执行finalize()过程中，若对象依然没与引用链上的GC Roots直接关联或间接关联（即关联上与GC Roots 关联的对象），那么该对象将被判断死亡，不筛选（留在”即将回收“集合里）并等待回收</p>
+<h2 id="3、引用相关"><a href="#3、引用相关" class="headerlink" title="3、引用相关"></a>3、引用相关</h2><p>不管是引用计数还是可达性分析，都和引用有关。 Java中引用包括：</p>
+<h3 id="1、强引用"><a href="#1、强引用" class="headerlink" title="1、强引用"></a>1、强引用</h3><p>最普遍的引用，只要强引用存在，对象肯定不会被回收。</p>
+<p>++obj就是强引用。通过关键字new 创建的对象所关联的引用就是强引用++。 当JVM内存空间不足，JVM宁愿抛出OutOfMemory Error运行时错误（OOM），使程序异常终止，也不会靠随意回收具有强引用的“存活”对 象来解决内存不足的问题。对于一个普通的对象，如果没有其他的引用关系，只要超过了引 用的作用域或者显式地将相应（强）引用赋值为 null，就是可以被垃圾收集的了，具体回收 时机还是要看垃圾收集策略。</p>
+<h3 id="2、软引用"><a href="#2、软引用" class="headerlink" title="2、软引用"></a>2、软引用</h3><p>描述有用但并非必需的对象，当内存不足时，就会回收这些对象。Java中提供SoftReference类。 一般用于内存敏感的高速缓存中。</p>
+<p>图片缓存框架中，“内存缓存”中的图片是以这种引用来保存，使得JVM在发生 OOM之前，可以回收这部分缓存</p>
+<h3 id="3、弱引用"><a href="#3、弱引用" class="headerlink" title="3、弱引用"></a>3、弱引用</h3><p>描述非必需对象，强度比软引用更弱。在垃圾回收器线程扫描它所管辖的内存区域的过程中，一旦发现了只具有弱引用的对象，不管当前内存空间足够与否，都会回收它的内存。不过，由于垃圾回收器是一个优先级很低的线程，因此不一定会很快发现那些只具有弱引用的对象。Java中提供WeakReference类。</p>
+<p>在静态内部类中，经常会使用虚引用。例如，一个类发送网络请求，承担callbac k的静态内部类，则常以虚引用的方式来保存外部类(宿主类)的引用，当外部类需要被JVM回 收时，不会因为网络请求没有及时回来，导致外部类不能被回收，引起内存泄漏</p>
+<h4 id="4、虚引用"><a href="#4、虚引用" class="headerlink" title="4、虚引用"></a>4、虚引用</h4><p>又称幽灵引用或幻影引用，最弱的一种引用关系。虚引用对对象的生命周期不会有任何影响，不能通过虚引用取得对象的实例。唯一的目的是，设置虚引用的对象在被回收时会收到</p>
+<p>应用场景：可用来跟踪对象被垃圾回收器回收的活动，当一个虚引用关联的对象被垃圾收集 器回收之前会收到一条系统通知。</p>
+<p>这种引用的get()方法返回总是null，所以，可以想象，在平常的项目开发肯定 用的少。但是根据这种引用的特点，我想可以通过监控这类引用，来进行一些垃圾清理的动作。可以参考jdk内部cleaner使用<br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%88%A4%E6%96%AD%E5%AF%B9%E8%B1%A1%E6%98%AF%E5%90%A6%E5%AD%98%E6%B4%BB3.png" alt></p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/29/看书笔记/深入理解Java虚拟机/1、Java内存区域与内存溢出异常/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Wfc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="只想当扫地机器人的老王">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/06/29/看书笔记/深入理解Java虚拟机/1、Java内存区域与内存溢出异常/" class="post-title-link" itemprop="url">1、Java内存区域与内存溢出异常</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-06-29 23:36:03 / 修改时间：23:35:39" itemprop="dateCreated datePublished" datetime="2019-06-29T23:36:03+08:00">2019-06-29</time>
             
 
             
@@ -472,7 +722,9 @@
 <li>本地库接口（Native Interface）</li>
 </ol>
 <p>各个组成部分的用途：</p>
-<h2 id="程序在执行之前先要把java代码转换成字节码（class文件），jvm首先需要把字节码通过一定的方式-类加载器（ClassLoader）-把文件加载到内存中-运行时数据区（Runtime-Data-Area）-，而字节码文件是jvm的一套指令集规范，并不能直接交个底层操作系统去执行，因此需要特定的命令解析器-执行引擎（Execution-Engine）-将字节码翻译成底层系统指令再交由CPU去执行，而这个过程中需要调用其他语言的接口-本地库接口（Native-Interface）-来实现整个程序的功能，这就是这4个主要组成部分的职责与功能。"><a href="#程序在执行之前先要把java代码转换成字节码（class文件），jvm首先需要把字节码通过一定的方式-类加载器（ClassLoader）-把文件加载到内存中-运行时数据区（Runtime-Data-Area）-，而字节码文件是jvm的一套指令集规范，并不能直接交个底层操作系统去执行，因此需要特定的命令解析器-执行引擎（Execution-Engine）-将字节码翻译成底层系统指令再交由CPU去执行，而这个过程中需要调用其他语言的接口-本地库接口（Native-Interface）-来实现整个程序的功能，这就是这4个主要组成部分的职责与功能。" class="headerlink" title="程序在执行之前先要把java代码转换成字节码（class文件），jvm首先需要把字节码通过一定的方式 类加载器（ClassLoader） 把文件加载到内存中 运行时数据区（Runtime Data Area） ，而字节码文件是jvm的一套指令集规范，并不能直接交个底层操作系统去执行，因此需要特定的命令解析器 执行引擎（Execution Engine） 将字节码翻译成底层系统指令再交由CPU去执行，而这个过程中需要调用其他语言的接口 本地库接口（Native Interface） 来实现整个程序的功能，这就是这4个主要组成部分的职责与功能。"></a>程序在执行之前先要把java代码转换成字节码（class文件），jvm首先需要把字节码通过一定的方式 <strong>类加载器（ClassLoader）</strong> 把文件加载到内存中 <strong>运行时数据区（Runtime Data Area）</strong> ，而字节码文件是jvm的一套指令集规范，并不能直接交个底层操作系统去执行，因此需要特定的命令解析器 <strong>执行引擎（Execution Engine）</strong> 将字节码翻译成底层系统指令再交由CPU去执行，而这个过程中需要调用其他语言的接口 <strong>本地库接口（Native Interface）</strong> 来实现整个程序的功能，这就是这4个主要组成部分的职责与功能。</h2><p>而我们通常所说的jvm组成指的是运行时数据区（Runtime Data Area），因为通常需要程序员调试分析的区域就是“运行时数据区”，或者更具体的来说就是“运行时数据区”里面的Heap（堆）模块，那接下来我们来看运行时数据区（Runtime Data Area）是由哪些模块组成的。</p>
+<p>程序在执行之前先要把java代码转换成字节码（class文件），jvm首先需要把字节码通过一定的方式 <strong>类加载器（ClassLoader）</strong> 把文件加载到内存中 <strong>运行时数据区（Runtime Data Area）</strong> ，而字节码文件是jvm的一套指令集规范，并不能直接交个底层操作系统去执行，因此需要特定的命令解析器 <strong>执行引擎（Execution Engine）</strong> 将字节码翻译成底层系统指令再交由CPU去执行，而这个过程中需要调用其他语言的接口 <strong>本地库接口（Native Interface）</strong> 来实现整个程序的功能，这就是这4个主要组成部分的职责与功能。</p>
+<hr>
+<p>而我们通常所说的jvm组成指的是运行时数据区（Runtime Data Area），因为通常需要程序员调试分析的区域就是“运行时数据区”，或者更具体的来说就是“运行时数据区”里面的Heap（堆）模块，那接下来我们来看运行时数据区（Runtime Data Area）是由哪些模块组成的。</p>
 <p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%9B%BE1.png" alt></p>
 <p>主要介绍Java虚拟机内存的各区域，以及它们的作用、服务对象以及可能产生的问题。<br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%9B%BE2.png" alt></p>
 <p>按照上图Java虚拟机运行时数据区做个梳理</p>
@@ -525,6 +777,249 @@
 <p>Object obj = new Object();</p>
 <p>Object obj会在Java栈中的本地变量表，作为一个reference类型数据出现<br>new Object()在Java堆中形成一块存储了Object类型所有实例数据值<br>从方法区中查找对应的对象类型数据（对象类型、父类、实现的接口、方法等）的地址信息</p>
 <p>两种访问对象的方式，通过句柄访问对象、通过直接指针访问对象<br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%AF%B9%E8%B1%A1%E8%AE%BF%E9%97%AE%E5%AE%9A%E4%BD%8D1.png" alt><br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%AF%B9%E8%B1%A1%E8%AE%BF%E9%97%AE%E5%AE%9A%E4%BD%8D2.png" alt></p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/29/看书笔记/深入理解Java虚拟机/2、对象创建与内存分布/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Wfc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="只想当扫地机器人的老王">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/06/29/看书笔记/深入理解Java虚拟机/2、对象创建与内存分布/" class="post-title-link" itemprop="url">2、对象创建与内存分布</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-06-29 23:35:09 / 修改时间：23:34:10" itemprop="dateCreated datePublished" datetime="2019-06-29T23:35:09+08:00">2019-06-29</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/" itemprop="url" rel="index"><span itemprop="name">看书笔记</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/深入理解Java虚拟机/" itemprop="url" rel="index"><span itemprop="name">深入理解Java虚拟机</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="1、对象创建"><a href="#1、对象创建" class="headerlink" title="1、对象创建"></a>1、对象创建</h2><p>创建对象流程图</p>
+<p>当遇到关键字new指令时，Java对象创建过程便开始，整个过程如下：<br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%AF%B9%E8%B1%A1%E5%88%9B%E5%BB%BA%E6%B5%81%E7%A8%8B%E5%9B%BE.png" alt></p>
+<h3 id="步骤1：类加载检查"><a href="#步骤1：类加载检查" class="headerlink" title="步骤1：类加载检查"></a>步骤1：类加载检查</h3><ol>
+<li>检查 该new指令的参数 是否能在 常量池中 定位到一个类的符号引用</li>
+<li>检查 该类符号引用 代表的类是否已被加载、解析和初始化过</li>
+</ol>
+<p>如果没有，需要先执行相应的类加载过程</p>
+<ul>
+<li>检查常量池中是否有即将要创建的这个对象所属的类的符号引用；若常量池中没有这个类的符号引用，说明这个类还没有被定义！抛出ClassNotFoundException；若常量池中有这个类的符号引用，则进行下一步工作；</li>
+<li>进而检查这个符号引用所代表的类是否已经被JVM加载；若该类还没有被加载，就找该类的class文件，并加载进方法区；若该类已经被JVM加载，则准备为对象分配内存；</li>
+<li>根据方法区中该类的信息确定该类所需的内存大小； 一个对象所需的内存大小是在这个对象所属类被定义完就能确定的！且一个类所生产的所有对象的内存大小是一样的！JVM在一个类被加载进方法区的时候就知道该类生产的每一个对象所需要的内存大小。</li>
+</ul>
+<h3 id="步骤2：为对象分配内存"><a href="#步骤2：为对象分配内存" class="headerlink" title="步骤2：为对象分配内存"></a>步骤2：为对象分配内存</h3><ul>
+<li>虚拟机将为对象分配内存，即把一块确定大小的内存从 Java 堆中划分出来，对象所需内存的大小在类加载完成后便可完全确定</li>
+<li>内存分配 根据 Java堆内存是否绝对规整 分为两种方式：指针碰撞 &amp; 空闲列表</li>
+</ul>
+<p>Java堆内存 规整：已使用的内存在一边，未使用内存在另一边 Java堆内存 不规整：已使用的内存和未使用内存相互交错<br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%86%85%E5%AD%98%E8%A7%84%E6%95%B4.png" alt></p>
+<p><strong>方式1：指针碰撞（规整）</strong></p>
+<p>如果内存是绝对规整的，即左右两边分别是已占用内存和闲置内存，中间有分界点的指针指示器，那么内存分配仅仅在于指针的移动，这种分配方式叫做“指针碰撞”。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D.png" alt></p>
+<p>那么，分配对象内存=把指针向未使用内存移动一段与对象大小相等的距离<br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D2.png" alt></p>
+<p><strong>方式2：空闲列表（不规整</strong>）</p>
+<p>如果内存不规整，即已使用和空闲的内存交错分布，那么虚拟机必须维护一个列表，记录哪些内存可用。创建对象时从列表中找到一块足够大的空间划分给对象使用，同时更新列表记录。这种分配方式称为“空闲列表”</p>
+<p><strong>对象分配内存会存在线程不安全问题</strong><br>对象创建在虚拟机中是非常频繁的操作，即使仅仅修改一个指针所指向的位置，在并发情况下也会引起线程不安全。如，正在给对象A分配内存，指针还没有来得及修改，对象B又同时使用了原来的指针来分配内存</p>
+<p>解决线程不安全有两种方案：<br>1、同步处理分配内存空间的行为<br>虚拟机采用CAS（Compare and Swap，多线程操作中只有一个线程能成功，其他线程被通知竞争失败）配上失败重试的方式保证操作的原子性</p>
+<p>2、把内存分配的动作按线程分在不同的空间中进行，这样可以很大程度避免在并发情况下频繁创建对象造成的线程不安全</p>
+<p>每个线程在Java堆中预先分配一小块内存，各个线程的内存分配发生在自己的TLAB区域内，只有TLAB用完需要分配新的空间时才需要同步锁定,即每个线程在堆中都会有私有的分配缓冲区(TLAB)，分配内存的时候在当前线程的TLAB上分配，只有旧的TLAB用完才给新的TLAB时才需要同步锁定。虚拟机是否使用TLAB，可通过-XX:+/-UseTLAB参数设定。</p>
+<h3 id="步骤3：-将内存空间初始化为零值"><a href="#步骤3：-将内存空间初始化为零值" class="headerlink" title="步骤3： 将内存空间初始化为零值"></a>步骤3： 将内存空间初始化为零值</h3><p>内存分配完成后，虚拟机需要将分配到的内存空间初始化为零（不包括对象头）：内存空间分配完成后会初始化为0(不包括对象头)保证了Java代码中不赋初值就可以使用。</p>
+<ol>
+<li>保证了对象的实例字段在使用时可不赋初始值就直接使用（对应值 = 0）</li>
+<li>如使用本地线程分配缓冲（TLAB），这一工作过程也可以提前至TLAB分配时进行。</li>
+</ol>
+<h3 id="步骤4：-对对象进行必要的设置"><a href="#步骤4：-对对象进行必要的设置" class="headerlink" title="步骤4： 对对象进行必要的设置"></a>步骤4： 对对象进行必要的设置</h3><ul>
+<li>接下来就是填充对象头，把对象是哪个类的实例、如何才能找到类的元数据信息、对象的哈希码、对象GC分代年龄等信息存入对象头。JVM根据当前运行状态的不同设置不同的对象头。</li>
+<li>执行new指令后执行init方法后（初始化）才算一份真正可用的对象创建完成。</li>
+</ul>
+<h2 id="2、对象的内存分布"><a href="#2、对象的内存分布" class="headerlink" title="2、对象的内存分布"></a>2、对象的内存分布</h2><p>在 HotSpot 虚拟机中，分为3块区域：对象头(Header)、实例数据(Instance Data)和对齐填充(Padding)</p>
+<h3 id="1-对象头区域"><a href="#1-对象头区域" class="headerlink" title="1 对象头区域"></a>1 对象头区域</h3><p>此处存储的信息包括两部分：</p>
+<p>对象自身的运行时数据</p>
+<ul>
+<li>如哈希码（HashCode）、GC分代年龄、锁状态标志、线程持有的锁、偏向线程ID、偏向时间戳等</li>
+<li>该部分数据被设计成1个非固定的数据结构以便在极小的空间存储尽量多的信息（会根据对象状态复用存储空间）</li>
+</ul>
+<p>对象类型指针</p>
+<ul>
+<li>即对象指向它的类元数据的指针（++方法区加载的类++）</li>
+<li>虚拟机通过这个指针来确定这个对象是哪个类的实例</li>
+</ul>
+<p>特别注意</p>
+<p>如果对象是数组，那么在对象头中还必须有一块用于记录数组长度的数据<br>因为虚拟机可以通过普通Java对象的元数据信息确定对象的大小，但是从数组的元数据中却无法确定数组的大小。</p>
+<h3 id="2-实例数据区域"><a href="#2-实例数据区域" class="headerlink" title="2 实例数据区域"></a>2 实例数据区域</h3><p>存储的信息：对象真正有效的信息 即代码中定义的字段内容</p>
+<h3 id="3-对齐填充区域"><a href="#3-对齐填充区域" class="headerlink" title="3 对齐填充区域"></a>3 对齐填充区域</h3><p>存储的信息：占位符 占位作用<br>因为对象的大小必须是8字节的整数倍<br>而因HotSpot VM的要求对象起始地址必须是8字节的整数倍，且对象头部分正好是8字节的倍数。<br>因此，当对象实例数据部分没有对齐时（即对象的大小不是8字节的整数倍），就需要通过对齐填充来补全。</p>
+<h2 id="3、对象的访问定位"><a href="#3、对象的访问定位" class="headerlink" title="3、对象的访问定位"></a>3、对象的访问定位</h2><p>问：建立对象后，该如何访问对象呢？实际上需访问的是 对象类型数据 &amp; 对象实例数据</p>
+<p>答：Java程序 通过 栈上的引用类型数据（reference） 来访问Java堆上的对象 由于引用类型数据（reference）在 Java虚拟机中只规定了一个指向对象的引用，但没定义该引用应该通过何种方式去定位、访问堆中的对象的具体位置</p>
+<p>所以对象访问方式取决于虚拟机实现。目前主流的对象访问方式有两种：<br>句柄访问、直接指针访问</p>
+<p>1、句柄访问</p>
+<p>句柄访问方式，会在Java堆中划分一块内存作为句柄池，Java栈中的reference存储对象所对应句柄的地址，而句柄中包含了对象的实例数据的地址和类型数据的地址信息。其实这是一个二级访问的过程。</p>
+<p>优点：当对象移动时，reference保存的句柄地址不用改变，只需要修改句柄中实例数据的地址信息。</p>
+<p>缺点：速度慢，两次指针定位开销大。</p>
+<p>2、直接访问</p>
+<p>直接访问，reference中存放的就是对象在堆中的实际地址。</p>
+<p>优点：速度快，直接定位，因而hotspot采用此种方式。</p>
+<p>比较：使用句柄的最大好处是reference中存储的是稳定的句柄地址，在对象移动(GC)是只改变实例数据指针地址，reference自身不需要修改。直接指针访问的最大好处是速度快，节省了一次指针定位的时间开销。如果是对象频繁GC那么句柄方法好，如果是对象频繁访问则直接指针访问好。</p>
+<h2 id="4、对象分配"><a href="#4、对象分配" class="headerlink" title="4、对象分配"></a>4、对象分配</h2><p>新生代 GC (Minor GC)：发生在新生代的垃圾回收动作，频繁，速度快。</p>
+<p>老年代 GC (Major GC / Full GC)：发生在老年代的垃圾回收动作，出现了 Major GC 经常会伴随至少一次 Minor GC(非绝对)。Major GC 的速度一般会比 Minor GC 慢十倍以上。</p>
+<h3 id="1、对象优先在Eden区分配"><a href="#1、对象优先在Eden区分配" class="headerlink" title="1、对象优先在Eden区分配"></a>1、对象优先在Eden区分配</h3><p>大多数情况，对象在新生代Eden区分配内存</p>
+<p>当Eden区没有足够空间时，将发起一次Minor GC。</p>
+<h3 id="2、大对象直接进入老年代"><a href="#2、大对象直接进入老年代" class="headerlink" title="2、大对象直接进入老年代"></a>2、大对象直接进入老年代</h3><p>大对象：如很长的字符串和数组。</p>
+<p>大对象直接进入老年代可以节省大量的复制开销。</p>
+<p>程序员应尽量避免”短命大对象“，”短命大对象“容易引起频繁的GC。</p>
+<h3 id="3、长期存活的对象将进入老年代"><a href="#3、长期存活的对象将进入老年代" class="headerlink" title="3、长期存活的对象将进入老年代"></a>3、长期存活的对象将进入老年代</h3><p>当对象进入Survivor区，设置年龄为1，在Survivor区每熬过一次GC，年龄加1。当年龄到某个值（默认15），将被晋升到老年代。</p>
+<h3 id="4、动态对象年龄判定"><a href="#4、动态对象年龄判定" class="headerlink" title="4、动态对象年龄判定"></a>4、动态对象年龄判定</h3><p>如果Survivor空间中相同年龄所有对象大小的总和大于Survivor空间的一半，大于等于该年龄的对象可直接进入老年代。</p>
+<p>这样可以防止Survivor区大量复制和减小空间分配担保的可能性。</p>
+<h3 id="5、空间分配担保"><a href="#5、空间分配担保" class="headerlink" title="5、空间分配担保"></a>5、空间分配担保</h3><p>进行Minor GC之前，会检查老年代最大可用连续空间是否大于新生代所有对象空间。如果是，那么这次Minor GC是安全的。否则，检查是否允许担保失败：</p>
+<p>允许：比较老年代最大可用连续空间是否大于历次晋升到老年代的平均值，如果大于，则尝试Minor GC，显然这是有风险的。如果小于，或者设置不允许冒险，则要先进行一次Full GC。</p>
+<h3 id="6、如果老年代的对象需要引用新生代的对象，会发生什么呢？"><a href="#6、如果老年代的对象需要引用新生代的对象，会发生什么呢？" class="headerlink" title="6、如果老年代的对象需要引用新生代的对象，会发生什么呢？"></a>6、如果老年代的对象需要引用新生代的对象，会发生什么呢？</h3><p>为了解决这个问题，老年代中存在一个 card table ，它是一个512byte大小的块。所有老年代的对象指向新生代对象的引用都会被记录在这个表中。当针对新生代执行GC的时候，只需要查询 card table 来决定是否可以被回收，而不用查询整个老年代。这个 card table 由一个write barrier 来管理。write barrier给GC带来了很大的性能提升，虽然由此可能带来一些开销，但完全是值得的。</p>
 
           
         
@@ -956,7 +1451,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-count">5</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>

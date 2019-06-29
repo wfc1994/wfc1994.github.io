@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="1、对象创建创建对象流程图 当遇到关键字new指令时，Java对象创建过程便开始，整个过程如下： 步骤1：类加载检查 检查 该new指令的参数 是否能在 常量池中 定位到一个类的符号引用 检查 该类符号引用 代表的类是否已被加载、解析和初始化过  如果没有，需要先执行相应的类加载过程  检查常量池中是否有即将要创建的这个对象所属的类的符号引用；若常量池中没有这个类的符号引用，说明这个类还没有被定义">
+<meta name="keywords" content="笔记,JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="2、对象创建与内存分布">
+<meta property="og:url" content="http://yoursite.com/2019/06/29/看书笔记/深入理解Java虚拟机/2、对象创建与内存分布/index.html">
+<meta property="og:site_name" content="只想当扫地机器人的老王">
+<meta property="og:description" content="1、对象创建创建对象流程图 当遇到关键字new指令时，Java对象创建过程便开始，整个过程如下： 步骤1：类加载检查 检查 该new指令的参数 是否能在 常量池中 定位到一个类的符号引用 检查 该类符号引用 代表的类是否已被加载、解析和初始化过  如果没有，需要先执行相应的类加载过程  检查常量池中是否有即将要创建的这个对象所属的类的符号引用；若常量池中没有这个类的符号引用，说明这个类还没有被定义">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%AF%B9%E8%B1%A1%E5%88%9B%E5%BB%BA%E6%B5%81%E7%A8%8B%E5%9B%BE.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%86%85%E5%AD%98%E8%A7%84%E6%95%B4.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D2.png">
+<meta property="og:updated_time" content="2019-06-29T15:34:10.612Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="2、对象创建与内存分布">
+<meta name="twitter:description" content="1、对象创建创建对象流程图 当遇到关键字new指令时，Java对象创建过程便开始，整个过程如下： 步骤1：类加载检查 检查 该new指令的参数 是否能在 常量池中 定位到一个类的符号引用 检查 该类符号引用 代表的类是否已被加载、解析和初始化过  如果没有，需要先执行相应的类加载过程  检查常量池中是否有即将要创建的这个对象所属的类的符号引用；若常量池中没有这个类的符号引用，说明这个类还没有被定义">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%AF%B9%E8%B1%A1%E5%88%9B%E5%BB%BA%E6%B5%81%E7%A8%8B%E5%9B%BE.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="http://yoursite.com/2019/06/29/看书笔记/深入理解Java虚拟机/2、对象创建与内存分布/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>2、对象创建与内存分布 | 只想当扫地机器人的老王</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+	<a href="https://github.com/wfc1994" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewbox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">只想当扫地机器人的老王</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-schedule">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/schedule/" rel="section"><i class="menu-item-icon fa fa-fw fa-calendar"></i> <br>日程表</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/29/看书笔记/深入理解Java虚拟机/2、对象创建与内存分布/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Wfc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="只想当扫地机器人的老王">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">2、对象创建与内存分布
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-06-29 23:35:09 / 修改时间：23:34:10" itemprop="dateCreated datePublished" datetime="2019-06-29T23:35:09+08:00">2019-06-29</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/" itemprop="url" rel="index"><span itemprop="name">看书笔记</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/深入理解Java虚拟机/" itemprop="url" rel="index"><span itemprop="name">深入理解Java虚拟机</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="1、对象创建"><a href="#1、对象创建" class="headerlink" title="1、对象创建"></a>1、对象创建</h2><p>创建对象流程图</p>
+<p>当遇到关键字new指令时，Java对象创建过程便开始，整个过程如下：<br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%AF%B9%E8%B1%A1%E5%88%9B%E5%BB%BA%E6%B5%81%E7%A8%8B%E5%9B%BE.png" alt></p>
+<h3 id="步骤1：类加载检查"><a href="#步骤1：类加载检查" class="headerlink" title="步骤1：类加载检查"></a>步骤1：类加载检查</h3><ol>
+<li>检查 该new指令的参数 是否能在 常量池中 定位到一个类的符号引用</li>
+<li>检查 该类符号引用 代表的类是否已被加载、解析和初始化过</li>
+</ol>
+<p>如果没有，需要先执行相应的类加载过程</p>
+<ul>
+<li>检查常量池中是否有即将要创建的这个对象所属的类的符号引用；若常量池中没有这个类的符号引用，说明这个类还没有被定义！抛出ClassNotFoundException；若常量池中有这个类的符号引用，则进行下一步工作；</li>
+<li>进而检查这个符号引用所代表的类是否已经被JVM加载；若该类还没有被加载，就找该类的class文件，并加载进方法区；若该类已经被JVM加载，则准备为对象分配内存；</li>
+<li>根据方法区中该类的信息确定该类所需的内存大小； 一个对象所需的内存大小是在这个对象所属类被定义完就能确定的！且一个类所生产的所有对象的内存大小是一样的！JVM在一个类被加载进方法区的时候就知道该类生产的每一个对象所需要的内存大小。</li>
+</ul>
+<h3 id="步骤2：为对象分配内存"><a href="#步骤2：为对象分配内存" class="headerlink" title="步骤2：为对象分配内存"></a>步骤2：为对象分配内存</h3><ul>
+<li>虚拟机将为对象分配内存，即把一块确定大小的内存从 Java 堆中划分出来，对象所需内存的大小在类加载完成后便可完全确定</li>
+<li>内存分配 根据 Java堆内存是否绝对规整 分为两种方式：指针碰撞 &amp; 空闲列表</li>
+</ul>
+<p>Java堆内存 规整：已使用的内存在一边，未使用内存在另一边 Java堆内存 不规整：已使用的内存和未使用内存相互交错<br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%86%85%E5%AD%98%E8%A7%84%E6%95%B4.png" alt></p>
+<p><strong>方式1：指针碰撞（规整）</strong></p>
+<p>如果内存是绝对规整的，即左右两边分别是已占用内存和闲置内存，中间有分界点的指针指示器，那么内存分配仅仅在于指针的移动，这种分配方式叫做“指针碰撞”。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D.png" alt></p>
+<p>那么，分配对象内存=把指针向未使用内存移动一段与对象大小相等的距离<br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D2.png" alt></p>
+<p><strong>方式2：空闲列表（不规整</strong>）</p>
+<p>如果内存不规整，即已使用和空闲的内存交错分布，那么虚拟机必须维护一个列表，记录哪些内存可用。创建对象时从列表中找到一块足够大的空间划分给对象使用，同时更新列表记录。这种分配方式称为“空闲列表”</p>
+<p><strong>对象分配内存会存在线程不安全问题</strong><br>对象创建在虚拟机中是非常频繁的操作，即使仅仅修改一个指针所指向的位置，在并发情况下也会引起线程不安全。如，正在给对象A分配内存，指针还没有来得及修改，对象B又同时使用了原来的指针来分配内存</p>
+<p>解决线程不安全有两种方案：<br>1、同步处理分配内存空间的行为<br>虚拟机采用CAS（Compare and Swap，多线程操作中只有一个线程能成功，其他线程被通知竞争失败）配上失败重试的方式保证操作的原子性</p>
+<p>2、把内存分配的动作按线程分在不同的空间中进行，这样可以很大程度避免在并发情况下频繁创建对象造成的线程不安全</p>
+<p>每个线程在Java堆中预先分配一小块内存，各个线程的内存分配发生在自己的TLAB区域内，只有TLAB用完需要分配新的空间时才需要同步锁定,即每个线程在堆中都会有私有的分配缓冲区(TLAB)，分配内存的时候在当前线程的TLAB上分配，只有旧的TLAB用完才给新的TLAB时才需要同步锁定。虚拟机是否使用TLAB，可通过-XX:+/-UseTLAB参数设定。</p>
+<h3 id="步骤3：-将内存空间初始化为零值"><a href="#步骤3：-将内存空间初始化为零值" class="headerlink" title="步骤3： 将内存空间初始化为零值"></a>步骤3： 将内存空间初始化为零值</h3><p>内存分配完成后，虚拟机需要将分配到的内存空间初始化为零（不包括对象头）：内存空间分配完成后会初始化为0(不包括对象头)保证了Java代码中不赋初值就可以使用。</p>
+<ol>
+<li>保证了对象的实例字段在使用时可不赋初始值就直接使用（对应值 = 0）</li>
+<li>如使用本地线程分配缓冲（TLAB），这一工作过程也可以提前至TLAB分配时进行。</li>
+</ol>
+<h3 id="步骤4：-对对象进行必要的设置"><a href="#步骤4：-对对象进行必要的设置" class="headerlink" title="步骤4： 对对象进行必要的设置"></a>步骤4： 对对象进行必要的设置</h3><ul>
+<li>接下来就是填充对象头，把对象是哪个类的实例、如何才能找到类的元数据信息、对象的哈希码、对象GC分代年龄等信息存入对象头。JVM根据当前运行状态的不同设置不同的对象头。</li>
+<li>执行new指令后执行init方法后（初始化）才算一份真正可用的对象创建完成。</li>
+</ul>
+<h2 id="2、对象的内存分布"><a href="#2、对象的内存分布" class="headerlink" title="2、对象的内存分布"></a>2、对象的内存分布</h2><p>在 HotSpot 虚拟机中，分为3块区域：对象头(Header)、实例数据(Instance Data)和对齐填充(Padding)</p>
+<h3 id="1-对象头区域"><a href="#1-对象头区域" class="headerlink" title="1 对象头区域"></a>1 对象头区域</h3><p>此处存储的信息包括两部分：</p>
+<p>对象自身的运行时数据</p>
+<ul>
+<li>如哈希码（HashCode）、GC分代年龄、锁状态标志、线程持有的锁、偏向线程ID、偏向时间戳等</li>
+<li>该部分数据被设计成1个非固定的数据结构以便在极小的空间存储尽量多的信息（会根据对象状态复用存储空间）</li>
+</ul>
+<p>对象类型指针</p>
+<ul>
+<li>即对象指向它的类元数据的指针（++方法区加载的类++）</li>
+<li>虚拟机通过这个指针来确定这个对象是哪个类的实例</li>
+</ul>
+<p>特别注意</p>
+<p>如果对象是数组，那么在对象头中还必须有一块用于记录数组长度的数据<br>因为虚拟机可以通过普通Java对象的元数据信息确定对象的大小，但是从数组的元数据中却无法确定数组的大小。</p>
+<h3 id="2-实例数据区域"><a href="#2-实例数据区域" class="headerlink" title="2 实例数据区域"></a>2 实例数据区域</h3><p>存储的信息：对象真正有效的信息 即代码中定义的字段内容</p>
+<h3 id="3-对齐填充区域"><a href="#3-对齐填充区域" class="headerlink" title="3 对齐填充区域"></a>3 对齐填充区域</h3><p>存储的信息：占位符 占位作用<br>因为对象的大小必须是8字节的整数倍<br>而因HotSpot VM的要求对象起始地址必须是8字节的整数倍，且对象头部分正好是8字节的倍数。<br>因此，当对象实例数据部分没有对齐时（即对象的大小不是8字节的整数倍），就需要通过对齐填充来补全。</p>
+<h2 id="3、对象的访问定位"><a href="#3、对象的访问定位" class="headerlink" title="3、对象的访问定位"></a>3、对象的访问定位</h2><p>问：建立对象后，该如何访问对象呢？实际上需访问的是 对象类型数据 &amp; 对象实例数据</p>
+<p>答：Java程序 通过 栈上的引用类型数据（reference） 来访问Java堆上的对象 由于引用类型数据（reference）在 Java虚拟机中只规定了一个指向对象的引用，但没定义该引用应该通过何种方式去定位、访问堆中的对象的具体位置</p>
+<p>所以对象访问方式取决于虚拟机实现。目前主流的对象访问方式有两种：<br>句柄访问、直接指针访问</p>
+<p>1、句柄访问</p>
+<p>句柄访问方式，会在Java堆中划分一块内存作为句柄池，Java栈中的reference存储对象所对应句柄的地址，而句柄中包含了对象的实例数据的地址和类型数据的地址信息。其实这是一个二级访问的过程。</p>
+<p>优点：当对象移动时，reference保存的句柄地址不用改变，只需要修改句柄中实例数据的地址信息。</p>
+<p>缺点：速度慢，两次指针定位开销大。</p>
+<p>2、直接访问</p>
+<p>直接访问，reference中存放的就是对象在堆中的实际地址。</p>
+<p>优点：速度快，直接定位，因而hotspot采用此种方式。</p>
+<p>比较：使用句柄的最大好处是reference中存储的是稳定的句柄地址，在对象移动(GC)是只改变实例数据指针地址，reference自身不需要修改。直接指针访问的最大好处是速度快，节省了一次指针定位的时间开销。如果是对象频繁GC那么句柄方法好，如果是对象频繁访问则直接指针访问好。</p>
+<h2 id="4、对象分配"><a href="#4、对象分配" class="headerlink" title="4、对象分配"></a>4、对象分配</h2><p>新生代 GC (Minor GC)：发生在新生代的垃圾回收动作，频繁，速度快。</p>
+<p>老年代 GC (Major GC / Full GC)：发生在老年代的垃圾回收动作，出现了 Major GC 经常会伴随至少一次 Minor GC(非绝对)。Major GC 的速度一般会比 Minor GC 慢十倍以上。</p>
+<h3 id="1、对象优先在Eden区分配"><a href="#1、对象优先在Eden区分配" class="headerlink" title="1、对象优先在Eden区分配"></a>1、对象优先在Eden区分配</h3><p>大多数情况，对象在新生代Eden区分配内存</p>
+<p>当Eden区没有足够空间时，将发起一次Minor GC。</p>
+<h3 id="2、大对象直接进入老年代"><a href="#2、大对象直接进入老年代" class="headerlink" title="2、大对象直接进入老年代"></a>2、大对象直接进入老年代</h3><p>大对象：如很长的字符串和数组。</p>
+<p>大对象直接进入老年代可以节省大量的复制开销。</p>
+<p>程序员应尽量避免”短命大对象“，”短命大对象“容易引起频繁的GC。</p>
+<h3 id="3、长期存活的对象将进入老年代"><a href="#3、长期存活的对象将进入老年代" class="headerlink" title="3、长期存活的对象将进入老年代"></a>3、长期存活的对象将进入老年代</h3><p>当对象进入Survivor区，设置年龄为1，在Survivor区每熬过一次GC，年龄加1。当年龄到某个值（默认15），将被晋升到老年代。</p>
+<h3 id="4、动态对象年龄判定"><a href="#4、动态对象年龄判定" class="headerlink" title="4、动态对象年龄判定"></a>4、动态对象年龄判定</h3><p>如果Survivor空间中相同年龄所有对象大小的总和大于Survivor空间的一半，大于等于该年龄的对象可直接进入老年代。</p>
+<p>这样可以防止Survivor区大量复制和减小空间分配担保的可能性。</p>
+<h3 id="5、空间分配担保"><a href="#5、空间分配担保" class="headerlink" title="5、空间分配担保"></a>5、空间分配担保</h3><p>进行Minor GC之前，会检查老年代最大可用连续空间是否大于新生代所有对象空间。如果是，那么这次Minor GC是安全的。否则，检查是否允许担保失败：</p>
+<p>允许：比较老年代最大可用连续空间是否大于历次晋升到老年代的平均值，如果大于，则尝试Minor GC，显然这是有风险的。如果小于，或者设置不允许冒险，则要先进行一次Full GC。</p>
+<h3 id="6、如果老年代的对象需要引用新生代的对象，会发生什么呢？"><a href="#6、如果老年代的对象需要引用新生代的对象，会发生什么呢？" class="headerlink" title="6、如果老年代的对象需要引用新生代的对象，会发生什么呢？"></a>6、如果老年代的对象需要引用新生代的对象，会发生什么呢？</h3><p>为了解决这个问题，老年代中存在一个 card table ，它是一个512byte大小的块。所有老年代的对象指向新生代对象的引用都会被记录在这个表中。当针对新生代执行GC的时候，只需要查询 card table 来决定是否可以被回收，而不用查询整个老年代。这个 card table 由一个write barrier 来管理。write barrier给GC带来了很大的性能提升，虽然由此可能带来一些开销，但完全是值得的。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/笔记/" rel="tag"># 笔记</a>
+          
+            <a href="/tags/JVM/" rel="tag"># JVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/23/ARTS打卡/artsweek2/" rel="next" title="ARTS打卡第二周">
+                <i class="fa fa-chevron-left"></i> ARTS打卡第二周
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/29/看书笔记/深入理解Java虚拟机/1、Java内存区域与内存溢出异常/" rel="prev" title="1、Java内存区域与内存溢出异常">
+                1、Java内存区域与内存溢出异常 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Wfc</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/wfc1994" title="GitHub &rarr; https://github.com/wfc1994" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:779481237@qq.com" title="E-Mail &rarr; mailto:779481237@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://weibo.com/u/3183050825" title="Weibo &rarr; https://weibo.com/u/3183050825" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>Weibo</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="/“”" title="wszgkm &rarr; “”"><i class="fa fa-fw fa-weixin"></i>wszgkm</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1、对象创建"><span class="nav-number">1.</span> <span class="nav-text">1、对象创建</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤1：类加载检查"><span class="nav-number">1.1.</span> <span class="nav-text">步骤1：类加载检查</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤2：为对象分配内存"><span class="nav-number">1.2.</span> <span class="nav-text">步骤2：为对象分配内存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤3：-将内存空间初始化为零值"><span class="nav-number">1.3.</span> <span class="nav-text">步骤3： 将内存空间初始化为零值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤4：-对对象进行必要的设置"><span class="nav-number">1.4.</span> <span class="nav-text">步骤4： 对对象进行必要的设置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2、对象的内存分布"><span class="nav-number">2.</span> <span class="nav-text">2、对象的内存分布</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-对象头区域"><span class="nav-number">2.1.</span> <span class="nav-text">1 对象头区域</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-实例数据区域"><span class="nav-number">2.2.</span> <span class="nav-text">2 实例数据区域</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-对齐填充区域"><span class="nav-number">2.3.</span> <span class="nav-text">3 对齐填充区域</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3、对象的访问定位"><span class="nav-number">3.</span> <span class="nav-text">3、对象的访问定位</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4、对象分配"><span class="nav-number">4.</span> <span class="nav-text">4、对象分配</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、对象优先在Eden区分配"><span class="nav-number">4.1.</span> <span class="nav-text">1、对象优先在Eden区分配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、大对象直接进入老年代"><span class="nav-number">4.2.</span> <span class="nav-text">2、大对象直接进入老年代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、长期存活的对象将进入老年代"><span class="nav-number">4.3.</span> <span class="nav-text">3、长期存活的对象将进入老年代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4、动态对象年龄判定"><span class="nav-number">4.4.</span> <span class="nav-text">4、动态对象年龄判定</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5、空间分配担保"><span class="nav-number">4.5.</span> <span class="nav-text">5、空间分配担保</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6、如果老年代的对象需要引用新生代的对象，会发生什么呢？"><span class="nav-number">4.6.</span> <span class="nav-text">6、如果老年代的对象需要引用新生代的对象，会发生什么呢？</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-wfc"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Wfc</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    
+    
+  
+  <script color="0,0,255" opacity="0.5" zindex="-1" count="99" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
