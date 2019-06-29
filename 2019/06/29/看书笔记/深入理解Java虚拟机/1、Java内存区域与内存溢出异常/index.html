@@ -94,13 +94,29 @@
 
 
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="只想当扫地机器人的老王">
-<meta property="og:url" content="http://yoursite.com/index.html">
+  <meta name="description" content="JVM整体分布JVM 整体组成可分为以下四个部分：  类加载器（ClassLoader） 运行时数据区（Runtime Data Area） 执行引擎（Execution Engine） 本地库接口（Native Interface）  各个组成部分的用途： 程序在执行之前先要把java代码转换成字节码（class文件），jvm首先需要把字节码通过一定的方式 类加载器（ClassLoader） 把">
+<meta name="keywords" content="笔记,JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java内存区域与内存溢出异常">
+<meta property="og:url" content="http://yoursite.com/2019/06/29/看书笔记/深入理解Java虚拟机/1、Java内存区域与内存溢出异常/index.html">
 <meta property="og:site_name" content="只想当扫地机器人的老王">
+<meta property="og:description" content="JVM整体分布JVM 整体组成可分为以下四个部分：  类加载器（ClassLoader） 运行时数据区（Runtime Data Area） 执行引擎（Execution Engine） 本地库接口（Native Interface）  各个组成部分的用途： 程序在执行之前先要把java代码转换成字节码（class文件），jvm首先需要把字节码通过一定的方式 类加载器（ClassLoader） 把">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%9B%BE1.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%9B%BE2.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E6%A0%881.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E6%A0%882.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E6%A0%883.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E6%96%B9%E6%B3%95%E5%8C%BA.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%B8%B8%E9%87%8F%E6%B1%A01.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%B8%B8%E9%87%8F%E6%B1%A02.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%AF%B9%E8%B1%A1%E8%AE%BF%E9%97%AE%E5%AE%9A%E4%BD%8D1.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%AF%B9%E8%B1%A1%E8%AE%BF%E9%97%AE%E5%AE%9A%E4%BD%8D2.png">
+<meta property="og:updated_time" content="2019-06-29T15:27:11.036Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="只想当扫地机器人的老王">
+<meta name="twitter:title" content="Java内存区域与内存溢出异常">
+<meta name="twitter:description" content="JVM整体分布JVM 整体组成可分为以下四个部分：  类加载器（ClassLoader） 运行时数据区（Runtime Data Area） 执行引擎（Execution Engine） 本地库接口（Native Interface）  各个组成部分的用途： 程序在执行之前先要把java代码转换成字节码（class文件），jvm首先需要把字节码通过一定的方式 类加载器（ClassLoader） 把">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%9B%BE1.png">
 
 
 
@@ -108,7 +124,7 @@
 
   
   
-  <link rel="canonical" href="http://yoursite.com/">
+  <link rel="canonical" href="http://yoursite.com/2019/06/29/看书笔记/深入理解Java虚拟机/1、Java内存区域与内存溢出异常/">
 
 
 
@@ -118,7 +134,7 @@
   };
 </script>
 
-  <title>只想当扫地机器人的老王</title>
+  <title>Java内存区域与内存溢出异常 | 只想当扫地机器人的老王</title>
   
 
 
@@ -166,8 +182,7 @@
     
   
 
-  <div class="container sidebar-position-left 
-  page-home">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 	<a href="https://github.com/wfc1994" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewbox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
 
@@ -206,7 +221,7 @@
         
         
           
-          <li class="menu-item menu-item-home menu-item-active">
+          <li class="menu-item menu-item-home">
 
     
     
@@ -336,9 +351,9 @@
           
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
 
@@ -370,10 +385,8 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2019/06/29/看书笔记/深入理解Java虚拟机/1、Java内存区域与内存溢出异常/" class="post-title-link" itemprop="url">Java内存区域与内存溢出异常</a>
+          <h1 class="post-title" itemprop="name headline">Java内存区域与内存溢出异常
+
               
             
           </h1>
@@ -462,9 +475,7 @@
       
 
       
-        
-          
-            <h2 id="JVM整体分布"><a href="#JVM整体分布" class="headerlink" title="JVM整体分布"></a>JVM整体分布</h2><p>JVM 整体组成可分为以下四个部分：</p>
+        <h2 id="JVM整体分布"><a href="#JVM整体分布" class="headerlink" title="JVM整体分布"></a>JVM整体分布</h2><p>JVM 整体组成可分为以下四个部分：</p>
 <ol>
 <li>类加载器（ClassLoader）</li>
 <li>运行时数据区（Runtime Data Area）</li>
@@ -526,8 +537,6 @@
 <p>Object obj会在Java栈中的本地变量表，作为一个reference类型数据出现<br>new Object()在Java堆中形成一块存储了Object类型所有实例数据值<br>从方法区中查找对应的对象类型数据（对象类型、父类、实现的接口、方法等）的地址信息</p>
 <p>两种访问对象的方式，通过句柄访问对象、通过直接指针访问对象<br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%AF%B9%E8%B1%A1%E8%AE%BF%E9%97%AE%E5%AE%9A%E4%BD%8D1.png" alt><br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%AF%B9%E8%B1%A1%E8%AE%BF%E9%97%AE%E5%AE%9A%E4%BD%8D2.png" alt></p>
 
-          
-        
       
     </div>
 
@@ -548,362 +557,41 @@
 
     <footer class="post-footer">
       
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/23/ARTS打卡/artsweek2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Wfc">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="只想当扫地机器人的老王">
-    </span>
-
-    
-      <header class="post-header">
-
         
+          
         
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2019/06/23/ARTS打卡/artsweek2/" class="post-title-link" itemprop="url">ARTS打卡第二周</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-06-23 20:00:00" itemprop="dateCreated datePublished" datetime="2019-06-23T20:00:00+08:00">2019-06-23</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-06-25 15:24:39" itemprop="dateModified" datetime="2019-06-25T15:24:39+08:00">2019-06-25</time>
-              
-            
-          </span>
-
+        <div class="post-tags">
           
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/ARTS打卡/" itemprop="url" rel="index"><span itemprop="name">ARTS打卡</span></a></span>
-
-                
-                
-              
-            </span>
+            <a href="/tags/笔记/" rel="tag"># 笔记</a>
           
-
+            <a href="/tags/JVM/" rel="tag"># JVM</a>
           
-            
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
         </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>【A】977. 有序数组的平方 完成了LeetCode这题<br>【R】The Filter Bubble what the internet is Hiding from you 看了这篇文章<br>【T】关于Hexo网站搭建的教程 弄了半天的Hexo博客，不错好看<br>【S】如何写出让同事无法维护的代码？ 很有意思的文章</p>
-<p>第二周打开链接<br>文档：Week2<br>链接：<a href="http://note.youdao.com/noteshare?id=c7d73c583b14c14a515595f1f4e15648" target="_blank" rel="noopener">http://note.youdao.com/noteshare?id=c7d73c583b14c14a515595f1f4e15648</a></p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
       
 
       
       
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
       
 
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/16/ARTS打卡/artsweek1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Wfc">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="只想当扫地机器人的老王">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2019/06/16/ARTS打卡/artsweek1/" class="post-title-link" itemprop="url">ARTS打卡第一周</a>
-              
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
             
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
+              <a href="/2019/06/23/ARTS打卡/artsweek2/" rel="next" title="ARTS打卡第二周">
+                <i class="fa fa-chevron-left"></i> ARTS打卡第二周
+              </a>
             
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
             
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-06-16 20:00:00" itemprop="dateCreated datePublished" datetime="2019-06-16T20:00:00+08:00">2019-06-16</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-06-25 15:24:25" itemprop="dateModified" datetime="2019-06-25T15:24:25+08:00">2019-06-25</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/ARTS打卡/" itemprop="url" rel="index"><span itemprop="name">ARTS打卡</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
+          </div>
         </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          
-            <p>1.Algorithm：每周至少做一个 leetcode 的算法题<br>2.Review：阅读并点评至少一篇英文论文<br>3.Tip：学习至少一个技术<br>4.Share：分享一篇有观点和思考的技术文章</p>
-<p>今后主要用网易云笔记的方式呈现，这是第一次打卡的链接：<br>文档：Week1<br>链接：<a href="http://note.youdao.com/noteshare?id=58c2bc82202e5bb093efa3d50636ea5b" target="_blank" rel="noopener">http://note.youdao.com/noteshare?id=58c2bc82202e5bb093efa3d50636ea5b</a></p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
       
     </footer>
   </div>
@@ -913,14 +601,15 @@
   </article>
 
 
-    
-  </section>
-
-  
+  </div>
 
 
           </div>
           
+
+  
+
+
 
         </div>
         
@@ -940,8 +629,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <div class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <div class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -1084,6 +782,23 @@
       </div>
 
       
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#JVM整体分布"><span class="nav-number">1.</span> <span class="nav-text">JVM整体分布</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#程序在执行之前先要把java代码转换成字节码（class文件），jvm首先需要把字节码通过一定的方式-类加载器（ClassLoader）-把文件加载到内存中-运行时数据区（Runtime-Data-Area）-，而字节码文件是jvm的一套指令集规范，并不能直接交个底层操作系统去执行，因此需要特定的命令解析器-执行引擎（Execution-Engine）-将字节码翻译成底层系统指令再交由CPU去执行，而这个过程中需要调用其他语言的接口-本地库接口（Native-Interface）-来实现整个程序的功能，这就是这4个主要组成部分的职责与功能。"><span class="nav-number">2.</span> <span class="nav-text">程序在执行之前先要把java代码转换成字节码（class文件），jvm首先需要把字节码通过一定的方式 类加载器（ClassLoader） 把文件加载到内存中 运行时数据区（Runtime Data Area） ，而字节码文件是jvm的一套指令集规范，并不能直接交个底层操作系统去执行，因此需要特定的命令解析器 执行引擎（Execution Engine） 将字节码翻译成底层系统指令再交由CPU去执行，而这个过程中需要调用其他语言的接口 本地库接口（Native Interface） 来实现整个程序的功能，这就是这4个主要组成部分的职责与功能。</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java虚拟机运行时数据区"><span class="nav-number">3.</span> <span class="nav-text">Java虚拟机运行时数据区</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、程序计数器（线程私有）"><span class="nav-number">3.1.</span> <span class="nav-text">1、程序计数器（线程私有）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、Java虚拟机栈（线程私有）"><span class="nav-number">3.2.</span> <span class="nav-text">2、Java虚拟机栈（线程私有）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、本地方法栈（线程私有）"><span class="nav-number">3.3.</span> <span class="nav-text">3、本地方法栈（线程私有）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4、Java堆（线程共享）"><span class="nav-number">3.4.</span> <span class="nav-text">4、Java堆（线程共享）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5、方法区（线程共享）"><span class="nav-number">3.5.</span> <span class="nav-text">5、方法区（线程共享）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6、运行时常量池"><span class="nav-number">3.6.</span> <span class="nav-text">6、运行时常量池</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7、直接内存"><span class="nav-number">3.7.</span> <span class="nav-text">7、直接内存</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HotSpot虚拟机在Java堆中对象分配、布局和访问全过程"><span class="nav-number">4.</span> <span class="nav-text">HotSpot虚拟机在Java堆中对象分配、布局和访问全过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、对象创建"><span class="nav-number">4.1.</span> <span class="nav-text">1、对象创建</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#创建过程"><span class="nav-number">4.1.1.</span> <span class="nav-text">创建过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#在堆中分配空间方式"><span class="nav-number">4.1.2.</span> <span class="nav-text">在堆中分配空间方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#线程安全"><span class="nav-number">4.1.3.</span> <span class="nav-text">线程安全</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#后续过程"><span class="nav-number">4.1.4.</span> <span class="nav-text">后续过程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、对象的内存布局"><span class="nav-number">4.2.</span> <span class="nav-text">2、对象的内存布局</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#对象头"><span class="nav-number">4.2.1.</span> <span class="nav-text">对象头</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#实例数据"><span class="nav-number">4.2.2.</span> <span class="nav-text">实例数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#对齐填充"><span class="nav-number">4.2.3.</span> <span class="nav-text">对齐填充</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、对象的访问定位"><span class="nav-number">4.3.</span> <span class="nav-text">3、对象的访问定位</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
 
       
 
@@ -1220,6 +935,10 @@
 
 
   
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
 
   
 
@@ -1235,6 +954,8 @@
 
   
 
+
+  
 
 
   
