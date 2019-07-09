@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="1、基础知识点1.1 分派定义：确定执行哪个方法的过程分类：静态分派 &amp;amp; 动态分派 a. 疑问 方法的执行不是取决于代码设置中的执行对象吗？为什么还要选择呢？ b. 回答  若 一个对象对应于多个方法 时，就需要进行选择了 Java中的特性：多态，即重写 &amp;amp; 重载。  1.2 变量的静态类型 &amp;amp; 动态类型1234567891011121314151617181920publ">
+<meta name="keywords" content="笔记,JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="9、静态分派和动态分派">
+<meta property="og:url" content="http://yoursite.com/2019/07/10/看书笔记/深入理解Java虚拟机/9、静态分派和动态分派/index.html">
+<meta property="og:site_name" content="只想当扫地机器人的老王">
+<meta property="og:description" content="1、基础知识点1.1 分派定义：确定执行哪个方法的过程分类：静态分派 &amp;amp; 动态分派 a. 疑问 方法的执行不是取决于代码设置中的执行对象吗？为什么还要选择呢？ b. 回答  若 一个对象对应于多个方法 时，就需要进行选择了 Java中的特性：多态，即重写 &amp;amp; 重载。  1.2 变量的静态类型 &amp;amp; 动态类型1234567891011121314151617181920publ">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E9%9D%99%E6%80%81%E5%88%86%E6%B4%BE%E5%92%8C%E5%8A%A8%E6%80%81%E5%88%86%E6%B4%BE1.jpg">
+<meta property="og:updated_time" content="2019-07-09T02:25:40.281Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="9、静态分派和动态分派">
+<meta name="twitter:description" content="1、基础知识点1.1 分派定义：确定执行哪个方法的过程分类：静态分派 &amp;amp; 动态分派 a. 疑问 方法的执行不是取决于代码设置中的执行对象吗？为什么还要选择呢？ b. 回答  若 一个对象对应于多个方法 时，就需要进行选择了 Java中的特性：多态，即重写 &amp;amp; 重载。  1.2 变量的静态类型 &amp;amp; 动态类型1234567891011121314151617181920publ">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E9%9D%99%E6%80%81%E5%88%86%E6%B4%BE%E5%92%8C%E5%8A%A8%E6%80%81%E5%88%86%E6%B4%BE1.jpg">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="http://yoursite.com/2019/07/10/看书笔记/深入理解Java虚拟机/9、静态分派和动态分派/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>9、静态分派和动态分派 | 只想当扫地机器人的老王</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+	<a href="https://github.com/wfc1994" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewbox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">只想当扫地机器人的老王</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-schedule">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/schedule/" rel="section"><i class="menu-item-icon fa fa-fw fa-calendar"></i> <br>日程表</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/10/看书笔记/深入理解Java虚拟机/9、静态分派和动态分派/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Wfc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="只想当扫地机器人的老王">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">9、静态分派和动态分派
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-10 07:57:02" itemprop="dateCreated datePublished" datetime="2019-07-10T07:57:02+08:00">2019-07-10</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-07-09 10:25:40" itemprop="dateModified" datetime="2019-07-09T10:25:40+08:00">2019-07-09</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/" itemprop="url" rel="index"><span itemprop="name">看书笔记</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/深入理解Java虚拟机/" itemprop="url" rel="index"><span itemprop="name">深入理解Java虚拟机</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="1、基础知识点"><a href="#1、基础知识点" class="headerlink" title="1、基础知识点"></a>1、基础知识点</h2><h3 id="1-1-分派"><a href="#1-1-分派" class="headerlink" title="1.1 分派"></a>1.1 分派</h3><p>定义：确定执行哪个方法的过程<br>分类：静态分派 &amp; 动态分派</p>
+<p>a. 疑问</p>
+<p>方法的执行不是取决于代码设置中的执行对象吗？为什么还要选择呢？</p>
+<p>b. 回答</p>
+<ul>
+<li>若 一个对象对应于多个方法 时，就需要进行选择了</li>
+<li>Java中的特性：多态，即重写 &amp; 重载。</li>
+</ul>
+<h3 id="1-2-变量的静态类型-amp-动态类型"><a href="#1-2-变量的静态类型-amp-动态类型" class="headerlink" title="1.2 变量的静态类型 &amp; 动态类型"></a>1.2 变量的静态类型 &amp; 动态类型</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">public class Test &#123; </span><br><span class="line"></span><br><span class="line">    static abstract class Human &#123; </span><br><span class="line">    &#125; </span><br><span class="line"> </span><br><span class="line">    static class Man extends Human &#123; </span><br><span class="line">    &#125; </span><br><span class="line"> </span><br><span class="line">    static class Woman extends Human &#123; </span><br><span class="line">    &#125; </span><br><span class="line"></span><br><span class="line">// 执行代码</span><br><span class="line">public static void main(String[] args) &#123; </span><br><span class="line"></span><br><span class="line">  Human man = new Man(); </span><br><span class="line">  // 变量man的静态类型 = 引用类型 = Human：不会被改变、在编译器可知</span><br><span class="line">  // 变量man的动态类型 = 实例对象类型 = Man：会变化、在运行期才可知</span><br><span class="line"></span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>变量的静态类型 = 引用类型 ：不会被改变、在编译器可知</strong></p>
+<p><strong>变量的动态类型 = 实例对象类型 ：会变化、在运行期才可知</strong></p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E9%9D%99%E6%80%81%E5%88%86%E6%B4%BE%E5%92%8C%E5%8A%A8%E6%80%81%E5%88%86%E6%B4%BE1.jpg" alt></p>
+<h2 id="2、静态分派"><a href="#2、静态分派" class="headerlink" title="2、静态分派"></a>2、静态分派</h2><p>定义: </p>
+<ol>
+<li>根据变量的静态类型进行方法分派的行为即根据 变量的静态类型确定执行哪个方法</li>
+<li>发生在编译期，所以不由 Java 虚拟机来执行</li>
+</ol>
+<p>应用场景</p>
+<p>方法重载（OverLoad） = 静态分派 = 根据 变量的静态类型确定执行（重载）哪个方法。</p>
+<p>什么是重载？</p>
+<p>如果我们想要在同一个类中定义名字相同的方法，那么它们的参数类型必须不同。这些方法之间的关系，我们称之为重载。重载的方法在编译过程中即可完成识别。具体到每一个方法调用，Java 编译器会根据所传入参数的声明类型（注意与实际类型区分）来选取重载方法。选取的过程共分为三个阶段：</p>
+<ol>
+<li>在不考虑对基本类型自动装拆箱（auto-boxing，auto-unboxing），以及可变长参数的情况下选取重载方法；</li>
+<li>如果在第 1 个阶段中没有找到适配的方法，那么在允许自动装拆箱，但不允许可变长参数的情况下选取重载方法；</li>
+<li>如果在第 2 个阶段中没有找到适配的方法，那么在允许自动装拆箱以及可变长参数的情况下选取重载方法。</li>
+</ol>
+<p>如果 Java 编译器在同一个阶段中找到了多个适配的方法，那么它会在其中选择一个最为贴切的，而决定贴切程度的一个关键就是形式参数类型的继承关系。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">public class Test &#123; </span><br><span class="line"></span><br><span class="line">// 类定义</span><br><span class="line">    static abstract class Human &#123; </span><br><span class="line">    &#125; </span><br><span class="line"> </span><br><span class="line">// 继承自抽象类Human</span><br><span class="line">    static class Man extends Human &#123; </span><br><span class="line">    &#125; </span><br><span class="line"> </span><br><span class="line">    static class Woman extends Human &#123; </span><br><span class="line">    &#125; </span><br><span class="line"> </span><br><span class="line">// 可供重载的方法</span><br><span class="line">    public void sayHello(Human guy) &#123; </span><br><span class="line">        System.out.println(&quot;hello,guy!&quot;); </span><br><span class="line">    &#125; </span><br><span class="line"> </span><br><span class="line">    public void sayHello(Man guy) &#123; </span><br><span class="line">        System.out.println(&quot;hello gentleman!&quot;); </span><br><span class="line">    &#125; </span><br><span class="line"> </span><br><span class="line">    public void sayHello(Woman guy) &#123; </span><br><span class="line">        System.out.println(&quot;hello lady!&quot;); </span><br><span class="line">    &#125; </span><br><span class="line"></span><br><span class="line">// 测试代码</span><br><span class="line">    public static void main(String[] args) &#123; </span><br><span class="line">        Human man = new Man(); </span><br><span class="line">        Human woman = new Woman(); </span><br><span class="line">        Test test = new Test(); </span><br><span class="line"></span><br><span class="line">        test.sayHello(man);  //man修饰的是Human</span><br><span class="line">        test.sayHello(woman); //woman修饰的是Human</span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 运行结果</span><br><span class="line">hello,guy! </span><br><span class="line">hello,guy!</span><br></pre></td></tr></table></figure>
+
+<p>特别注意</p>
+<p>a. 变量的静态类型发生变化的情况</p>
+<p>可通过强制类型转换改变变量的静态类型</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Human man = new Man(); </span><br><span class="line">test.sayHello((Man)man); </span><br><span class="line">// 强制类型转换</span><br><span class="line">// 此时man的静态类型从 Human 变为 Man</span><br><span class="line"></span><br><span class="line">// 所以会调用sayHello()中参数为Man guy的方法，即sayHello(Man guy)</span><br></pre></td></tr></table></figure>
+
+<p>b. 静态分派的优先级匹配问题</p>
+<p>问题描述：</p>
+<p>背景：现需要进行静态分派</p>
+<p>问题：程序中没有显示指 静态类型</p>
+<p>解决方案：程序会根据<strong>静态类型的优先级</strong>从而选择优先的静态类型进行方法分配。</p>
+<p>特别注意</p>
+<ul>
+<li>上面讲解的主要是基本数据类型的优先级匹配问题</li>
+<li>若是引用类型，则根据继承关系进行优先级匹配</li>
+</ul>
+<p>注意只跟其编译时类型（即静态类型）相关</p>
+<p>优先级顺序为：</p>
+<ul>
+<li>char &gt; int &gt; long &gt; float &gt; double &gt; Character &gt; Serializable &gt; Object &gt;…</li>
+<li>其中…为变长参数，将其视为一个数组元素。变长参数的重载优先级最低。 因为 char 转型到 byte 或 short 的过程是不安全的 所以不会选择参数类型为byte</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">//比如：</span><br><span class="line">public class Overload &#123;  </span><br><span class="line">      </span><br><span class="line">    private static void sayHello(char arg)&#123;  </span><br><span class="line">        System.out.println(&quot;hello char&quot;);  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    private static void sayHello(Object arg)&#123;  </span><br><span class="line">        System.out.println(&quot;hello Object&quot;);  </span><br><span class="line">    &#125;  </span><br><span class="line">      </span><br><span class="line">    private static void sayHello(int arg)&#123;  </span><br><span class="line">        System.out.println(&quot;hello int&quot;);  </span><br><span class="line">    &#125;  </span><br><span class="line">      </span><br><span class="line">    private static void sayHello(long arg)&#123;  </span><br><span class="line">        System.out.println(&quot;hello long&quot;);  </span><br><span class="line">    &#125;  </span><br><span class="line">      </span><br><span class="line">// 测试代码</span><br><span class="line">    public static void main(String[] args) &#123;  </span><br><span class="line">          </span><br><span class="line">        sayHello(&apos;a&apos;);  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line">// 运行结果</span><br><span class="line">hello char</span><br></pre></td></tr></table></figure>
+
+<h2 id="3、动态分派"><a href="#3、动态分派" class="headerlink" title="3、动态分派"></a>3、动态分派</h2><h3 id="3-1-定义"><a href="#3-1-定义" class="headerlink" title="3.1 定义"></a>3.1 定义</h3><p>根据 变量的动态类型进行方法分派的行为</p>
+<p>即根据 变量的动态类型确定执行哪个方法</p>
+<h3 id="3-2-应用场景"><a href="#3-2-应用场景" class="headerlink" title="3.2 应用场景"></a>3.2 应用场景</h3><p>方法重写（Override）</p>
+<p>如果子类定义了与父类中非私有、非静态方法同名的方法，那么只有当这两个方法的参数类型以及返回类型一致，Java 虚拟机才会判定为重写。</p>
+<p>对于 Java 语言中重写而 Java 虚拟机中非重写的情况，编译器会通过生成桥接方法 来实现 Java 中的重写语义。</p>
+<p>由于对重载方法的区分在编译阶段已经完成，我们可以认为 Java 虚拟机不存在重载这一概念。</p>
+<p>确切地说，Java 虚拟机中的静态绑定指的是在解析时便能够直接识别目标方法的情况，而动态绑定则指的是需要在运行过程中根据调用者的动态类型来识别目标方法的情况。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">// 定义类</span><br><span class="line">    class Human &#123; </span><br><span class="line">        public void sayHello()&#123; </span><br><span class="line">            System.out.println(&quot;Human say hello&quot;); </span><br><span class="line"> </span><br><span class="line">        &#125; </span><br><span class="line">    &#125; </span><br><span class="line"> </span><br><span class="line">// 继承自 抽象类Human 并 重写sayHello()</span><br><span class="line">    class Man extends Human &#123; </span><br><span class="line">        @Override </span><br><span class="line">        protected void sayHello() &#123; </span><br><span class="line">            System.out.println(&quot;man say hello&quot;); </span><br><span class="line"> </span><br><span class="line">        &#125; </span><br><span class="line">    &#125; </span><br><span class="line"> </span><br><span class="line">    class Woman extends Human &#123; </span><br><span class="line">        @Override </span><br><span class="line">        protected void sayHello() &#123; </span><br><span class="line">            System.out.println(&quot;woman say hello&quot;); </span><br><span class="line"> </span><br><span class="line">        &#125; </span><br><span class="line">    &#125; </span><br><span class="line"></span><br><span class="line">// 测试代码</span><br><span class="line">    public static void main(String[] args) &#123; </span><br><span class="line"></span><br><span class="line">        // 情况1</span><br><span class="line">        Human man = new man(); </span><br><span class="line">        man.sayHello(); </span><br><span class="line"></span><br><span class="line">        // 情况2</span><br><span class="line">        man = new Woman(); </span><br><span class="line">        man.sayHello(); </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 运行结果</span><br><span class="line">man say hello</span><br><span class="line">woman say hello</span><br><span class="line"></span><br><span class="line">// 原因解析</span><br><span class="line">// 1. 方法重写（Override） = 动态分派 = 根据 变量的动态类型 确定执行（重写）哪个方法</span><br><span class="line">// 2. 对于情况1：根据变量（Man）的动态类型（man）确定调用man中的重写方法sayHello()</span><br><span class="line">// 3. 对于情况2：根据变量（Man）的动态类型（woman）确定调用woman中的重写方法sayHello()</span><br></pre></td></tr></table></figure>
+
+<p>invokevirtual指令执行的第一步 = 确定接受者的实际类型</p>
+<p>invokevirtual指令执行的第二步 = 将 常量池中 类方法符号引用 解析到不同的直接引用上</p>
+<p>第二步即方法重写（Override）的本质</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">例子：静态+动态</span><br><span class="line">A ab = new B(); 这里ab的引用类型是A，但是它指向的内存是类型为B的一个实例。</span><br><span class="line">ab.show(b)执行的时候：</span><br><span class="line">1、首先编译期调用的方法都必须在 class A里面有的才行（因为你的引用类型为A）这里 class A有show(A obj) show(D obj)着两个方法。选择了show(A obj) （因为A是B的父类，向上转型）。这边是静态。</span><br><span class="line">2、运行期ab.show(b)执行show(A obj)的适合，发现ab内存地址指向一个类型为B内存空间，如果class B Override 了 class A的show(A obj)方法，则调用B的方法而不是直接使用show(B obj)，这边是动态。</span><br><span class="line"></span><br><span class="line">class A &#123;  </span><br><span class="line">    public String show(D obj)&#123;  </span><br><span class="line">           return (&quot;A and D&quot;);  </span><br><span class="line">    &#125;   </span><br><span class="line">    public String show(A obj)&#123;  </span><br><span class="line">           return (&quot;A and A&quot;);  </span><br><span class="line">    &#125; </span><br><span class="line">&#125;   </span><br><span class="line">class B extends A&#123; </span><br><span class="line">    public String show(A obj)&#123;  </span><br><span class="line">           return (&quot;B and A&quot;);  </span><br><span class="line">    &#125;   </span><br><span class="line">    public String show(B obj)&#123;  </span><br><span class="line">           return (&quot;B and B&quot;);  </span><br><span class="line">    &#125; </span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line">public class MultiTest&#123; </span><br><span class="line">public static void main(String[] args)&#123; </span><br><span class="line">        A ab = new B();  </span><br><span class="line">        B b = new B();  </span><br><span class="line">        C c = new C(); </span><br><span class="line">        //ab的show方法先进去，找到参数为A obj，然后再看子类有没有重写 ，重写就执行子类的show</span><br><span class="line">        System.out.println(ab.show(b));   </span><br><span class="line">        System.out.println(ab.show(c)); </span><br><span class="line">&#125; </span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line">运行代码结果如下： </span><br><span class="line">B and A </span><br><span class="line">B and A</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">例子：动态+初始化编译</span><br><span class="line"></span><br><span class="line">class Father&#123;</span><br><span class="line">	int age = 40;</span><br><span class="line">	Father()&#123;</span><br><span class="line">		show();</span><br><span class="line">	&#125;</span><br><span class="line">	public void show () &#123;</span><br><span class="line">		System.out.println(age);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">class Son extends Father &#123;</span><br><span class="line">	int age = 20;</span><br><span class="line">	public void show() &#123;</span><br><span class="line">		System.out.println(age);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">public class Demo &#123;</span><br><span class="line">	public static void main(String[] args) &#123;</span><br><span class="line">		Father f = new Son();</span><br><span class="line">		f.show();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//0 20</span><br><span class="line">//先执行构造函数，父类构造函数执行show的时候</span><br><span class="line">//父类的Age还没有初始化，默认为0，</span><br><span class="line">//f.show的时候，先执行父类，但是子类重写过，所有就执行子类的show方法</span><br><span class="line"></span><br><span class="line">public class Demo &#123; </span><br><span class="line">    class Super&#123;  </span><br><span class="line">        int flag=1;</span><br><span class="line">         Super()&#123;</span><br><span class="line">             test();</span><br><span class="line">         &#125;  void test()&#123;</span><br><span class="line">            System.out.println(&quot;Super.test() flag=&quot;+flag);</span><br><span class="line">         &#125;</span><br><span class="line">    &#125; </span><br><span class="line">    class Sub extends Super&#123;</span><br><span class="line">        Sub(int i)&#123;  </span><br><span class="line">            flag=i;</span><br><span class="line">            System.out.println(&quot;Sub.Sub()flag=&quot;+flag);</span><br><span class="line">        &#125;  void test()&#123;</span><br><span class="line">            System.out.println(&quot;Sub.test()flag=&quot;+flag);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;  </span><br><span class="line">    public static void main(String[] args) &#123;  </span><br><span class="line">        new Demo().new Sub(5);</span><br><span class="line">     &#125;</span><br><span class="line">&#125;</span><br><span class="line">    // Sub.Sub()flag= 1 Sub.Sub()flag= 5</span><br><span class="line">    //这个比上面那个区别是：这个子类没有申明flag，直接用父类的，上面的从新申明了</span><br></pre></td></tr></table></figure>
+
+<h2 id="4、单分派与多分派"><a href="#4、单分派与多分派" class="headerlink" title="4、单分派与多分派"></a>4、单分派与多分派</h2><ul>
+<li><p><em>方法的接收者、方法的参数都可以称为方法的宗量</em>。根据分批基于多少种宗量，可以将分派划分为单分派和多分派。单分派是根据一个宗量对目标方法进行选择的，多分派是根据多于一个的宗量对目标方法进行选择的。</p>
+</li>
+<li><p>Java在进行静态分派时，选择目标方法要依据两点：一是变量的静态类型是哪个类型，二是方法参数是什么类型。因为要根据两个宗量进行选择，所以Java语言的静态分派属于多分派类型。</p>
+</li>
+<li><p>运行时阶段的动态分派过程，由于编译器已经确定了目标方法的签名（包括方法参数），运行时虚拟机只需要确定方法的接收者的实际类型，就可以分派。因为是根据一个宗量作为选择依据，所以Java语言的动态分派属于单分派类型。</p>
+</li>
+</ul>
+<h2 id="5、虚拟机动态分派的实现"><a href="#5、虚拟机动态分派的实现" class="headerlink" title="5、虚拟机动态分派的实现"></a>5、虚拟机动态分派的实现</h2><ul>
+<li><p>由于动态分派是非常频繁的动作，而动态分派在方法版本选择过程中又需要在方法元数据中搜索合适的目标方法，虚拟机实现出于性能的考虑，通常不直接进行如此频繁的搜索，而是采用优化方法。</p>
+</li>
+<li><p>其中一种“稳定优化”手段是：在类的方法区中建立一个虚方法表（Virtual Method Table, 也称vtable, 与此对应，也存在接口方法表——Interface Method Table，也称itable）。使用虚方法表索引来代替元数据查找以提高性能。其原理与C++的虚函数表类似。</p>
+</li>
+<li><p>通过虚方法表存放各个方法的实际入口地址，如果某个方法在子类中没有被重写，那子类的虚方法表里面的地址入口和父类相同方法的地址入口是一致的，都指向父类的实现入口；如果子类中重写了这个方法，子类方法表中的地址将会诶替换为指向子类实现版本的入口地址。</p>
+</li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/笔记/" rel="tag"># 笔记</a>
+          
+            <a href="/tags/JVM/" rel="tag"># JVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/10/看书笔记/深入理解Java虚拟机/8、类加载器与双亲委派模型/" rel="next" title="8、类加载器与双亲委派模型">
+                <i class="fa fa-chevron-left"></i> 8、类加载器与双亲委派模型
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/10/看书笔记/深入理解Java虚拟机/10、字节码执行引擎/" rel="prev" title="10、字节码执行引擎">
+                10、字节码执行引擎 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Wfc</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">20</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/wfc1994" title="GitHub &rarr; https://github.com/wfc1994" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:779481237@qq.com" title="E-Mail &rarr; mailto:779481237@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://weibo.com/u/3183050825" title="Weibo &rarr; https://weibo.com/u/3183050825" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>Weibo</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="/“”" title="wszgkm &rarr; “”"><i class="fa fa-fw fa-weixin"></i>wszgkm</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1、基础知识点"><span class="nav-number">1.</span> <span class="nav-text">1、基础知识点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-分派"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 分派</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-变量的静态类型-amp-动态类型"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 变量的静态类型 &amp; 动态类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2、静态分派"><span class="nav-number">2.</span> <span class="nav-text">2、静态分派</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3、动态分派"><span class="nav-number">3.</span> <span class="nav-text">3、动态分派</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-定义"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-应用场景"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 应用场景</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4、单分派与多分派"><span class="nav-number">4.</span> <span class="nav-text">4、单分派与多分派</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5、虚拟机动态分派的实现"><span class="nav-number">5.</span> <span class="nav-text">5、虚拟机动态分派的实现</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-wfc"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Wfc</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    
+    
+  
+  <script color="0,0,255" opacity="0.5" zindex="-1" count="99" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

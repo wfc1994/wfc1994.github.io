@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="1、概述计算机只认识0和1，我们编写的程序需要经编译器翻译为由0和1构成的二进制文件才能被计算机执行。伴随着虚拟机和大量建立在虚拟机上程序语言的出现，将程序编译为本地字节码文件已不再是唯一的选择，越来越多的程序语言选择了与操作系统无关的，平台中立的格式作为程序编译后的存储格式。 各个不同平台的虚拟机与所有平台都统一使用相同的程序存储格式——字节码，它是构成平台无关性的基石。 在Java中，JVM可">
+<meta name="keywords" content="笔记,JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="6、类文件结构">
+<meta property="og:url" content="http://yoursite.com/2019/07/10/看书笔记/深入理解Java虚拟机/6、类文件结构/index.html">
+<meta property="og:site_name" content="只想当扫地机器人的老王">
+<meta property="og:description" content="1、概述计算机只认识0和1，我们编写的程序需要经编译器翻译为由0和1构成的二进制文件才能被计算机执行。伴随着虚拟机和大量建立在虚拟机上程序语言的出现，将程序编译为本地字节码文件已不再是唯一的选择，越来越多的程序语言选择了与操作系统无关的，平台中立的格式作为程序编译后的存储格式。 各个不同平台的虚拟机与所有平台都统一使用相同的程序存储格式——字节码，它是构成平台无关性的基石。 在Java中，JVM可">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%8411.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%842.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%843.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%8412.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%844.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%845.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%846.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%847.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%849.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%8410.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%848.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%849.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%8410.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%8411.png">
+<meta property="og:updated_time" content="2019-07-03T11:09:47.152Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="6、类文件结构">
+<meta name="twitter:description" content="1、概述计算机只认识0和1，我们编写的程序需要经编译器翻译为由0和1构成的二进制文件才能被计算机执行。伴随着虚拟机和大量建立在虚拟机上程序语言的出现，将程序编译为本地字节码文件已不再是唯一的选择，越来越多的程序语言选择了与操作系统无关的，平台中立的格式作为程序编译后的存储格式。 各个不同平台的虚拟机与所有平台都统一使用相同的程序存储格式——字节码，它是构成平台无关性的基石。 在Java中，JVM可">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%8411.jpg">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="http://yoursite.com/2019/07/10/看书笔记/深入理解Java虚拟机/6、类文件结构/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>6、类文件结构 | 只想当扫地机器人的老王</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+	<a href="https://github.com/wfc1994" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewbox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">只想当扫地机器人的老王</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-schedule">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/schedule/" rel="section"><i class="menu-item-icon fa fa-fw fa-calendar"></i> <br>日程表</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/10/看书笔记/深入理解Java虚拟机/6、类文件结构/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Wfc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="只想当扫地机器人的老王">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">6、类文件结构
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-10 07:57:02" itemprop="dateCreated datePublished" datetime="2019-07-10T07:57:02+08:00">2019-07-10</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-07-03 19:09:47" itemprop="dateModified" datetime="2019-07-03T19:09:47+08:00">2019-07-03</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/" itemprop="url" rel="index"><span itemprop="name">看书笔记</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/深入理解Java虚拟机/" itemprop="url" rel="index"><span itemprop="name">深入理解Java虚拟机</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="1、概述"><a href="#1、概述" class="headerlink" title="1、概述"></a>1、概述</h2><p>计算机只认识0和1，我们编写的程序需要经编译器翻译为由0和1构成的二进制文件才能被计算机执行。伴随着虚拟机和大量建立在虚拟机上程序语言的出现，将程序编译为本地字节码文件已不再是唯一的选择，越来越多的程序语言选择了与操作系统无关的，平台中立的格式作为程序编译后的存储格式。 <strong>各个不同平台的虚拟机与所有平台都统一使用相同的程序存储格式——字节码</strong>，它是构成平台无关性的基石。</p>
+<p>在Java中，JVM可以理解的代码就叫做<em>字节码</em>（即扩展名为.class的文件），它不面向任何特定的处理器，只面向虚拟机。Java语言通过字节码的方式，在一定程度上解决了传统解释型语言执行效率低的问题，同时又保留了解释型语言可移植的特点。所以Java程序运行时比较高效，而且，由于字节码并不针对一种特定的机器，因此，Java程序无须重新编译便可在多种不同操作系统的计算机上运行。</p>
+<p>Clojure（Lisp 语言的一种方言）、Groovy、Scala 等语言都是运行在 Java 虚拟机之上。下图展示了不同的语言被不同的编译器编异常.class文件最终运行在 Java 虚拟机之上。.class文件的二进制格式可以使用 WinHex 查看。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%8411.jpg" alt></p>
+<p><strong>可以说.class文件是不同的语言在 Java 虚拟机之间的重要桥梁，同时也是支持 Java 跨平台很重要的一个原因。</strong></p>
+<h2 id="2、Class文件结构总结"><a href="#2、Class文件结构总结" class="headerlink" title="2、Class文件结构总结"></a>2、Class文件结构总结</h2><p>注意:<em>任何一个class文件都对应着唯一一个类或接口的定义信息，但反过来说，类或接口并不一定都得定义在文件里</em>(譬如类或接口也可以通过类加载器直接生成)。</p>
+<p>class文件是一组<strong>以8位字节为基础单位的二进制流</strong>，各个数据项目严格按照顺序紧凑地排列在class文件之中，中间没有任何分隔符，使得整个class文件中存储的内容几乎全部是程序运行的必要数据，没有空隙存在，当遇到需要占用8位字节以上空间的数据项时，则会按照高位在前的方式分割成若干个8位字节进行存储。</p>
+<ul>
+<li>Big-Endian：高位在前存储方式，高位字节放在内存的低地址端，低位字节放在内存的高地址端</li>
+<li>Little-Endian：低位在前存储方式，高位字节放在内存的高地址端，低位字节放在内存的低地址端</li>
+</ul>
+<p>Class文件格式采用一种类似C语言结构体的<strong>伪结构来存储数据，伪结构有两种类型：无符号数和表。</strong></p>
+<ul>
+<li><em>无符号数属于基本的数据类型</em>，以u1、u2、u4、u8来分别代表1个字节、2个字节、4个字节和8个字节的无符号数，<strong>无符号数可以用来描述数字、索引引用、数量值或者按照UTF-8编码构成的字符串值。</strong></li>
+<li><em>表是由多个无符号数或者其它表作为数据项构成的复合数据类型</em>，所有表都习惯性地以”_info”结尾。<strong>表用于描述有层次关系的复合结构的数据，整个class文件本质上就是一张表。</strong></li>
+</ul>
+<p>根据 Java 虚拟机规范，类文件由单个 ClassFile 结构组成： 无论是无符号数还是表，当需要描述同一类型但数量不定的多个数据时，经常会使用一个前置的容量计数器加若干个连续的数据项的格式，这时称这一系列连续的某一类型的数据为某一类型的集合。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%842.png" alt></p>
+<p>下面详细介绍一下 Class 文件结构涉及到的一些组件。</p>
+<p><strong>Class文件字节码结构组织示意图</strong></p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%843.png" alt></p>
+<h3 id="2-1-魔数"><a href="#2-1-魔数" class="headerlink" title="2.1 魔数"></a>2.1 魔数</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">u4             magic; //Class 文件的标志</span><br></pre></td></tr></table></figure>
+
+<p>每个 Class 文件的头<em>四个字节</em>称为魔数（Magic Number）,<strong>它的唯一作用是确定这个文件是否为一个能被虚拟机接收的 Class 文件。</strong></p>
+<p>程序设计者很多时候都喜欢用一些特殊的数字表示固定的文件类型或者其它特殊的含义。</p>
+<h3 id="2-2-Class-文件版本"><a href="#2-2-Class-文件版本" class="headerlink" title="2.2 Class 文件版本"></a>2.2 Class 文件版本</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">u2             minor_version;//Class 的小版本号</span><br><span class="line">u2             major_version;//Class 的大版本号</span><br></pre></td></tr></table></figure>
+
+<p>紧接着魔数的<em>四个字节存储</em>的是 Class 文件的版本号：第五和第六是次版本号，第七和第八是主版本号。</p>
+<p>高版本的 Java 虚拟机可以执行低版本编译器生成的 Class 文件，但是低版本的 Java 虚拟机不能执行高版本编译器生成的 Class 文件。所以，我们在实际开发的时候要确保开发的的 JDK 版本和生产环境的 JDK 版本保持一致。</p>
+<h3 id="2-3-常量池"><a href="#2-3-常量池" class="headerlink" title="2.3 常量池"></a>2.3 常量池</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">u2             minor_version;//Class 的小版本号</span><br><span class="line">u2             major_version;//Class 的大版本号</span><br></pre></td></tr></table></figure>
+
+<p>紧接着魔数的<em>四个字节存储</em>的是 Class 文件的版本号：第五和第六是次版本号，第七和第八是主版本号。</p>
+<p>高版本的 Java 虚拟机可以执行低版本编译器生成的 Class 文件，但是低版本的 Java 虚拟机不能执行高版本编译器生成的 Class 文件。所以，我们在实际开发的时候要确保开发的的 JDK 版本和生产环境的 JDK 版本保持一致。</p>
+<h3 id="2-3-常量池-1"><a href="#2-3-常量池-1" class="headerlink" title="2.3 常量池"></a>2.3 常量池</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">u2             constant_pool_count;//常量池的数量</span><br><span class="line">cp_info        constant_pool[constant_pool_count-1];//常量池</span><br></pre></td></tr></table></figure>
+
+<p>紧接着主次版本号之后的是常量池，常量池的数量是constant_pool_count-1<strong>（常量池计数器是从1开始计数的，将第0项常量空出来是有特殊考虑的，索引值为0代表“不引用任何一个常量池项”）。</strong></p>
+<p>常量池主要存放两大常量：字面量和符号引用。字面量比较接近于 Java 语言层面的的常量概念，如文本字符串、声明为 final 的常量值等。而符号引用则属于编译原理方面的概念。包括下面三类常量：</p>
+<ul>
+<li>类和接口的全限定名</li>
+<li>字段的名称和描述符</li>
+<li>方法的名称和描述符</li>
+</ul>
+<p>常量池中每一项常量都是一个表，这14种表有一个共同的特点：<strong>开始的第一位是一个 u1 类型的标志位 -tag 来标识常量的类型，代表当前这个常量属于哪种常量类型．</strong></p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>标志（tag）</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CONSTANT_utf8_info</td>
+<td>1</td>
+<td>UTF-8编码的字符串</td>
+</tr>
+<tr>
+<td>CONSTANT_Integer_info</td>
+<td>3</td>
+<td>整形字面量</td>
+</tr>
+<tr>
+<td>CONSTANT_Float_info</td>
+<td>4</td>
+<td>浮点型字面量</td>
+</tr>
+<tr>
+<td>CONSTANT_Long_info</td>
+<td>5</td>
+<td>长整型字面量</td>
+</tr>
+<tr>
+<td>CONSTANT_Double_info</td>
+<td>6</td>
+<td>双精度浮点型字面量</td>
+</tr>
+<tr>
+<td>CONSTANT_Class_info</td>
+<td>7</td>
+<td>类或接口的符号引用</td>
+</tr>
+<tr>
+<td>CONSTANT_String_info</td>
+<td>8</td>
+<td>字符串类型字面量</td>
+</tr>
+<tr>
+<td>CONSTANT_Fieldref_info</td>
+<td>9</td>
+<td>字段的符号引用</td>
+</tr>
+<tr>
+<td>CONSTANT_Methodref_info</td>
+<td>10</td>
+<td>类中方法的符号引用</td>
+</tr>
+<tr>
+<td>CONSTANT_InterfaceMethodref_info</td>
+<td>11</td>
+<td>接口中方法的符号引用</td>
+</tr>
+<tr>
+<td>CONSTANT_NameAndType_info</td>
+<td>12</td>
+<td>字段或方法的符号引用</td>
+</tr>
+<tr>
+<td>CONSTANT_MothodType_info</td>
+<td>16</td>
+<td>标志方法类型</td>
+</tr>
+<tr>
+<td>CONSTANT_MethodHandle_info</td>
+<td>15</td>
+<td>表示方法句柄</td>
+</tr>
+<tr>
+<td>CONSTANT_InvokeDynamic_info</td>
+<td>18</td>
+<td>表示一个动态方法调用点</td>
+</tr>
+</tbody></table>
+<p>.class 文件可以通过javap -v class类名 指令来看一下其常量池中的信息(javap -v class类名-&gt; temp.txt ：将结果输出到 temp.txt 文件)。</p>
+<p>关于怎么查常量项</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%8412.png" alt></p>
+<h3 id="2-4-访问标志"><a href="#2-4-访问标志" class="headerlink" title="2.4 访问标志"></a>2.4 访问标志</h3><p>在常量池结束之后，紧接着的两个字节代表访问标志，这个<strong>标志用于识别一些类或者接口层次的访问信息</strong>，包括：这个Class是类还是接口，是否为public 或者 abstract类型，如果是类的话是否声明为final等等。</p>
+<p>类访问和属性修饰符:</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%844.png" alt></p>
+<p>我们定义了一个 Employee 类</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">package top.snailclimb.bean;</span><br><span class="line">    public class Employee &#123;</span><br><span class="line">        ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过javap -v class类名 指令来看一下类的访问标志。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%845.png" alt></p>
+<h3 id="2-5-当前类索引-父类索引与接口索引集合"><a href="#2-5-当前类索引-父类索引与接口索引集合" class="headerlink" title="2.5 当前类索引,父类索引与接口索引集合"></a>2.5 当前类索引,父类索引与接口索引集合</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">u2             this_class;//当前类</span><br><span class="line">u2             super_class;//父类</span><br><span class="line">u2             interfaces_count;//接口</span><br><span class="line">u2             interfaces[interfaces_count];//一个雷可以实现多个接口</span><br></pre></td></tr></table></figure>
+
+<p>类索引用于确定这个类的全限定名，父类索引用于确定这个类的父类的全限定名，由于 Java 语言的单继承，所以父类索引只有一个，除了 java.lang.Object 之外，所有的 java 类都有父类，因此除了 java.lang.Object 外，所有 Java 类的父类索引都不为 0。</p>
+<p>接口索引集合用来描述这个类实现了那些接口，这些被实现的接口将按implents(如果这个类本身是接口的话则是extends) 后的接口顺序从左到右排列在接口索引集合中。</p>
+<p>怎么查</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%846.png" alt><br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%847.png" alt></p>
+<h3 id="2-6-字段表集合"><a href="#2-6-字段表集合" class="headerlink" title="2.6 字段表集合"></a>2.6 字段表集合</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">u2             fields_count;//Class 文件的字段的个数</span><br><span class="line">field_info     fields[fields_count];//一个类会可以有个字段</span><br></pre></td></tr></table></figure>
+
+<p><strong>字段表（field info）用于描述接口或类中声明的变量</strong>。字段包括类级变量以及实例变量，但不包括在方法内部声明的局部变量。</p>
+<p>field info(字段表) 的结构:</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%849.png" alt></p>
+<ul>
+<li>access_flags: 字段的作用域（public ,private,protected修饰符），是实例变量还是类变量（static修饰符）,可否被序列化（transient 修饰符）,可变性（final）,可见性（volatile 修饰符，是否强制从主内存读写）。</li>
+<li>name_index: 对常量池的引用，表示的字段的名称；</li>
+<li>descriptor_index: 对常量池的引用，表示字段和方法的描述符；</li>
+<li>attributes_count: 一个字段还会拥有一些额外的属性，attributes_count 存放属性的个数；</li>
+<li>attributes[attributes_count]: 存放具体属性具体内容。<br>上述这些信息中，各个修饰符都是布尔值，要么有某个修饰符，要么没有，很适合使用标志位来表示。而字段叫什么名字、字段被定义为什么数据类型这些都是无法固定的，只能引用常量池中常量来描述。</li>
+</ul>
+<p>字段的 access_flags 的取值:</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%8410.png" alt></p>
+<p>由Java本身的语言规则决定：ACC_PUBLIC、ACC_PRIVATE、ACC_PROTECTED中只能选一个；ACC_FINAL、ACC_VOLATILE不能同时选择；接口中字段必须有ACC_PUBLIC、ACC_STATIC、ACC_FINAL标志。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%848.png" alt></p>
+<p>对于数组来说，每多一个维度使用前置一个“[”表示。比如String[][]，那么用[[Ljava/lang/String表示。如果方法，则在前面多一个（） ，比如void inc()，那么用（）V表示。</p>
+<p>字段表集合中不会列出从超类或者父类接口中继承而来的字段，但有可能列出原本Java代码中不存在的字段，譬如在内部类中为了保持对外部类的访问性，会自动添加指向外部类实例的字段。Java语言中不管两个字段的数据类型、修饰符是否相同，都不能使用一样的名称；但对于字节码而言，两个字段的描述符不一致，字段名可以相同。</p>
+<h3 id="2-7-方法表集合"><a href="#2-7-方法表集合" class="headerlink" title="2.7 方法表集合"></a>2.7 方法表集合</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">u2             methods_count;//Class 文件的方法的数量</span><br><span class="line">method_info    methods[methods_count];//一个类可以有个多个方法</span><br></pre></td></tr></table></figure>
+
+<p>methods_count 表示方法的数量，而 method_info 表示的方法表。</p>
+<p>Class 文件存储格式中对方法的描述与对字段的描述几乎采用了完全一致的方式。方法表的结构如同字段表一样，<em>依次包括了访问标志、名称索引、描述符索引、属性表集合几项</em>。</p>
+<p>method_info(方法表的) 结构:</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%849.png" alt></p>
+<p>因volatile和transient不能修饰方法，方法表的访问标志中没有ACC_VOLATILE、ACC_TRANSIENT；sysnchronized、native、strictfp和abstract可以修饰方法，因此方法表的访问标志中添加了ACC_SYNCHRONIZED、ACC_NATIVE、ACC_STRICTFP和ACC_ABSTRACT标志。</p>
+<p>方法表的 access_flag 取值：</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%8410.png" alt></p>
+<p>如果父类方法在子类中没有被重写，方法表集合中就不会出现来自父类的方法信息，可能会出现编译器自动添加的方法，如类构造器””，方法和实例构造器””方法。</p>
+<p>Java中重载方法，要与原方法具有相同的简单名称，与原方法不同的特征签名；在对应的class文件中，特征签名就是方法各个参数在常量池中的字段符号引用的集合，但返回值不在其中，因此Java里无法仅仅依靠返回值对一个方法进行重载。但在class文件中，两个方法名称和特征签名相同，返回值不同的方法，可以合法存在与同一个class文件中。</p>
+<p>注意：因为volatile修饰符和transient修饰符不可以修饰方法，所以方法表的访问标志中没有这两个对应的标志，但是增加了synchronized、native、abstract等关键字修饰方法，所以也就多了这些关键字对应的标志。</p>
+<p>2.8 属性表集合</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">u2             attributes_count;//此类的属性表中的属性数</span><br><span class="line">attribute_info attributes[attributes_count];//属性表集合</span><br></pre></td></tr></table></figure>
+
+<p>在 Class 文件，字段表，方法表中都可以携带自己的属性表集合，以用于描述某些场景专有的信息。与 Class 文件中其它的数据项目要求的顺序、长度和内容不同，属性表集合的限制稍微宽松一些，不再要求各个属性表具有严格的顺序，并且只要不与已有的属性名重复，任何人实现的编译器都可以向属性表中写 入自己定义的属性信息，Java 虚拟机运行时会忽略掉它不认识的属性。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%8411.png" alt></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/笔记/" rel="tag"># 笔记</a>
+          
+            <a href="/tags/JVM/" rel="tag"># JVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/10/看书笔记/深入理解Java虚拟机/5、垃圾收集器/" rel="next" title="5、垃圾收集器">
+                <i class="fa fa-chevron-left"></i> 5、垃圾收集器
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/10/看书笔记/深入理解Java虚拟机/7、类加载的5个过程/" rel="prev" title="7、类加载的5个过程">
+                7、类加载的5个过程 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Wfc</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">20</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/wfc1994" title="GitHub &rarr; https://github.com/wfc1994" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:779481237@qq.com" title="E-Mail &rarr; mailto:779481237@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://weibo.com/u/3183050825" title="Weibo &rarr; https://weibo.com/u/3183050825" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>Weibo</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="/“”" title="wszgkm &rarr; “”"><i class="fa fa-fw fa-weixin"></i>wszgkm</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1、概述"><span class="nav-number">1.</span> <span class="nav-text">1、概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2、Class文件结构总结"><span class="nav-number">2.</span> <span class="nav-text">2、Class文件结构总结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-魔数"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 魔数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-Class-文件版本"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 Class 文件版本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-常量池"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 常量池</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-常量池-1"><span class="nav-number">2.4.</span> <span class="nav-text">2.3 常量池</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-访问标志"><span class="nav-number">2.5.</span> <span class="nav-text">2.4 访问标志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-5-当前类索引-父类索引与接口索引集合"><span class="nav-number">2.6.</span> <span class="nav-text">2.5 当前类索引,父类索引与接口索引集合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-6-字段表集合"><span class="nav-number">2.7.</span> <span class="nav-text">2.6 字段表集合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-7-方法表集合"><span class="nav-number">2.8.</span> <span class="nav-text">2.7 方法表集合</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-wfc"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Wfc</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    
+    
+  
+  <script color="0,0,255" opacity="0.5" zindex="-1" count="99" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

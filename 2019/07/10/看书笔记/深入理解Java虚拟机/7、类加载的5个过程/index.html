@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="1、类加载的本质将描述类的数据从Class文件加载到内存&amp;amp;对数据进行校验、转换解 和初始化，最终形成可被虚拟机直接使用的Java使用类型：Class文件是一串二进制字节流。 2、类加载过程 分为七个步骤，其中五个关键步骤：加载 -&amp;gt; 验证 -&amp;gt; 准备 -&amp;gt; 解析 -&amp;gt; 初始化  这几个阶段中的：加载、验证、准备、初始化、卸载的顺序是固定的。但是解析则有可能在初始化之">
+<meta name="keywords" content="笔记,JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="7、类加载的5个过程">
+<meta property="og:url" content="http://yoursite.com/2019/07/10/看书笔记/深入理解Java虚拟机/7、类加载的5个过程/index.html">
+<meta property="og:site_name" content="只想当扫地机器人的老王">
+<meta property="og:description" content="1、类加载的本质将描述类的数据从Class文件加载到内存&amp;amp;对数据进行校验、转换解 和初始化，最终形成可被虚拟机直接使用的Java使用类型：Class文件是一串二进制字节流。 2、类加载过程 分为七个步骤，其中五个关键步骤：加载 -&amp;gt; 验证 -&amp;gt; 准备 -&amp;gt; 解析 -&amp;gt; 初始化  这几个阶段中的：加载、验证、准备、初始化、卸载的顺序是固定的。但是解析则有可能在初始化之">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B11.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B2.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B3.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B4.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B5.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B6.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B7.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B6.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B9.jpg">
+<meta property="og:updated_time" content="2019-07-05T03:38:29.158Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="7、类加载的5个过程">
+<meta name="twitter:description" content="1、类加载的本质将描述类的数据从Class文件加载到内存&amp;amp;对数据进行校验、转换解 和初始化，最终形成可被虚拟机直接使用的Java使用类型：Class文件是一串二进制字节流。 2、类加载过程 分为七个步骤，其中五个关键步骤：加载 -&amp;gt; 验证 -&amp;gt; 准备 -&amp;gt; 解析 -&amp;gt; 初始化  这几个阶段中的：加载、验证、准备、初始化、卸载的顺序是固定的。但是解析则有可能在初始化之">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B11.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="http://yoursite.com/2019/07/10/看书笔记/深入理解Java虚拟机/7、类加载的5个过程/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>7、类加载的5个过程 | 只想当扫地机器人的老王</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+	<a href="https://github.com/wfc1994" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewbox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">只想当扫地机器人的老王</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-schedule">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/schedule/" rel="section"><i class="menu-item-icon fa fa-fw fa-calendar"></i> <br>日程表</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/10/看书笔记/深入理解Java虚拟机/7、类加载的5个过程/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Wfc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="只想当扫地机器人的老王">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">7、类加载的5个过程
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-10 07:57:02" itemprop="dateCreated datePublished" datetime="2019-07-10T07:57:02+08:00">2019-07-10</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-07-05 11:38:29" itemprop="dateModified" datetime="2019-07-05T11:38:29+08:00">2019-07-05</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/" itemprop="url" rel="index"><span itemprop="name">看书笔记</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/深入理解Java虚拟机/" itemprop="url" rel="index"><span itemprop="name">深入理解Java虚拟机</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="1、类加载的本质"><a href="#1、类加载的本质" class="headerlink" title="1、类加载的本质"></a>1、类加载的本质</h2><p>将描述类的数据从Class文件加载到内存&amp;对数据进行校验、转换解 和初始化，最终形成可被虚拟机直接使用的Java使用类型：<strong>Class文件是一串二进制字节流</strong>。</p>
+<h2 id="2、类加载过程"><a href="#2、类加载过程" class="headerlink" title="2、类加载过程"></a>2、类加载过程</h2><p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B11.png" alt></p>
+<p>分为七个步骤，其中五个关键步骤：加载 -&gt; 验证 -&gt; 准备 -&gt; 解析 -&gt; 初始化</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B2.jpg" alt></p>
+<p>这几个阶段中的：加载、验证、准备、初始化、卸载的顺序是固定的。但是解析则有可能在初始化之后才开始，这是为了支持Java语言的运行时绑定（也称为动态绑定或晚期绑定）。</p>
+<p>注意：上文所说按部就班地“开始”，而不是“进行”或“完成”，强调这点是因为这些阶段通常都是互相交叉地混合式进行，通常会在一个阶段执行的过程中调用、激活另一个阶段。加载阶段 与 连接阶段 的部分内容（如一部分字节码文件格式验证动作）是交叉进行的。加载阶段尚未完成，连接阶段可能已经开始，但这些加载加载阶段之中进行的动作，仍然属于连接阶段的内容，这两个阶段的开始时间仍然保持着固定的先后顺序。</p>
+<ul>
+<li>虚拟机对于类的初始化阶段严格规定了有且仅有只有5种情况如果对类没有进行过初始化，则必须对类进行“初始化”！</li>
+</ul>
+<ol>
+<li><p>遇到new、读取一个类的静态字段（getstatic）、设置一个类的静态字段（putstatic）、调用一个类的静态方法（invokestatic）。类没有初始化，那么需要先触发进行初始化。</p>
+</li>
+<li><p>使用java.lang.reflect包的方法对类进行反射调用时。</p>
+</li>
+<li><p>当类初始化一个类的时候，如果发现其父类还没有进行过初始化，则需要先触发其父类的初始化。（如果是接口，则不必触发其父类初始化）</p>
+</li>
+<li><p>当虚拟机执行一个main方法时，会首先初始化main所在的这个主类。</p>
+</li>
+<li><p>当只用jdk1.7的动态语言支持时，如果一个java.lang.invoke.MethodHandle实例最后的解析结果REF_getStatic、REF_putStatic、REF_invokeStatic的方法句柄，并且这个方法句柄所对应的类没有进行过初始化，则需要先触发其初始化。（暂未研究此种场景）</p>
+</li>
+</ol>
+<ul>
+<li>不会被初始化的三种情况：</li>
+</ul>
+<ol>
+<li>对于静态字段，只有直接定义这个字段的类才会被初始化，通过其子类来引用父类中定义的静态字段，只会触发父类的初始化而不会触发子类的初始化。</li>
+<li>所有引用类的方式都不会触发初始化称为被动引用。比如数组 A[] a = new A[];</li>
+<li>常量在编译阶段会存入调用类的常量池中，本质上并没有直接饮用到定义常量的类。进一步解释，虽然在main方法中引用了ConstClass类中的常量HELLO，但其实在编译阶段通过常量传播优化，已经将此常量的值“hello”存储到了Main类的常量池中，之后对ConstClass.HELLO的引用实际上都被转化为Main类对自身常量池的引用。也就是说，两个类在编译过后实际上不存在任何联系了。</li>
+</ol>
+<h3 id="步骤1：加载（加载到方法区）"><a href="#步骤1：加载（加载到方法区）" class="headerlink" title="步骤1：加载（加载到方法区）"></a>步骤1：加载（加载到方法区）</h3><p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B3.jpg" alt></p>
+<p>加载，将外部的类文件加载到虚拟机或者存储到方法区内是指查找字节流，并且据此创建类的过程。前面提到，对于数组类来说，它并没有对应的字节流，而是由Java虚拟机直接生成的。对于其他的类来说，Java虚拟机则需要借助类加载器来完成查找字节流的过程。类加载器实现的功能是即为加载阶段获取二进制字节流的时候。</p>
+<ul>
+<li>虚拟机完成三件事情：</li>
+</ul>
+<ol>
+<li><p>通过一个类的全限定名来获取此类的二进制字节流；<br>注意：这里的二进制字节流并不只是单纯地从Class文件中获取，比如它还可以从Jar包中获取、从网络中获取（最典型的应用便是Applet）、由其他文件生成（JSP应用）等。</p>
+</li>
+<li><p>将这个字节流所代表的静态存储结构转化为方法区的运行时数据结构；<br>注：“方法区域Java堆一样，是各线程共享的内存区域，它用于存储已被虚拟机加载的类信息、常量、静态变量、即时编译后的代码等数据”。而方法区中的数据存储结构格式虚拟机自行定义。</p>
+</li>
+<li><p>在内存中生成一个代表这个类的java.lang.Class对象，作为方法区这个类的各种数据的访问入口。<br>注：加载阶段完成后，虚拟机在内存中实例化一个java.lang.Class类的对象（Class是一个实实在在的对象，是记录着类成员、接口等信息的对象）。还有一点是，我们都知道对象肯定是存放在堆中的，但Class对象比较特殊，对于HotSpot虚拟机而言，Class对象是存放在方法区中的。</p>
+</li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B4.jpg" alt></p>
+<ul>
+<li>对于非数组类</li>
+</ul>
+<p>非数组类加载过程是开发人员可控性最强的，可以使用系统提供的引导类加载器，也可以由用户自定义类加载器完成（重新一个类加载器 loadClass()）。 对于数组类而言，数组类本身不通过类加载器创建，它是由Java虚拟机直接创建的，但是数组类的元素类型（Element Type，是指数组去掉所有维度的类型）最终要靠类加载器去创建，一个数组类（简称为C）创建过程要遵循以下规则：</p>
+<ol>
+<li>如果数组的组件类型是引用类型（非基础类型），那就递归去加载这个组件类型数组类将在加载该组件类型的类加载器的类名称空间上被标识。</li>
+<li>如果数组组件类型不是引用类型（例如int[]数组），Java虚拟机将会把该数组标记为与引导类加载器关联。</li>
+<li>数组类的可见性与他的组件类型可见性一致，如果组件类型不是引用类型，那数组的可见性将默认为public。</li>
+</ol>
+<p>加载阶段完成后，<em>虚拟机外部的二进制字节流就按照虚拟机所需的格式存储在方法区之中，方法区的数据存储格式由虚拟机实现自行定义，虚拟机规范未规定此区域的具体数据结构</em>。然后在内存实例化一个 java.lang.Class类的对象（并无明确规定是在Java 堆中，对于HotSpot虚拟机而言，Class对象比较特殊，它虽是对象，但存放在方法区里），这个对象将作为程序访问方法区中的这些类型数据的外部接口。</p>
+<h3 id="步骤2：验证"><a href="#步骤2：验证" class="headerlink" title="步骤2：验证"></a>步骤2：验证</h3><p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B5.jpg" alt></p>
+<p>验证是连接阶段的第一步，<strong>目的是为了确保Class文件的字节流中包含的信息符合当前虚拟机的要求，并且不会危害虚拟机自身的安全</strong>。验证阶段非常重要，直接决定了虚拟机是否能承受恶意代码的攻击，从执行性能的角度来讲，该阶段的工作量在虚拟机的类加载子系统中占有了相当大一部分。</p>
+<p>Java语言本身是相对安全的语言（相对于C/C++），使用纯粹的Java代码无法做到诸如访问数组边界之外的数据、将一个对象转型为它未实现的数据类型、跳转到不存在的代码行等，如果这样做了，编译器将拒绝编译，但是Class文件不一定由Java源码编译而来，完全可以使用任何途径，如：用十六进制编辑器直接编写来产生Class文件，在字节码层面上，上述Java代码无法做到的事情都是可以实现的，此时虚拟机如果不检查输入的字节流，很有可能因为载入了有害的字节流而导致系统崩溃，所以验证时虚拟机对自身保护的一项重要工作。</p>
+<p>验证阶段是非常重要的，但不是一定必要的阶段（对程序运行期没有影响），如果运行的全部代码都被反复使用和验证过，那么在实施阶段可以考虑通过参数-Xverify:none 来关闭类验证措施，以缩短虚拟机类加载的时间。</p>
+<p>大致都会完成以下四个阶段的验证：</p>
+<ol>
+<li>文件格式的验证</li>
+<li>元数据的验证</li>
+<li>字节码验证</li>
+<li>符号引用验证</li>
+</ol>
+<h3 id="步骤3：准备"><a href="#步骤3：准备" class="headerlink" title="步骤3：准备"></a>步骤3：准备</h3><p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B6.jpg" alt></p>
+<ul>
+<li>正式为<strong>类变量（静态变量）分配内存并设置变量初始值</strong>的阶段这些变量所使用的内存都在方法区中进行分配，对静态字段的具体初始化，则会在稍后的初始化阶段中进行。</li>
+<li>除了分配内存外，部分 Java 虚拟机还会在此阶段构造其他跟类层次相关的数据结构，比如说用来实现虚方法的动态绑定的方法表。</li>
+<li>在 class 文件被加载至 Java 虚拟机之前，这个类无法知道其他类及其方法、字段所对应的具体地址，甚至不知道自己方法、字段的地址。因此，每当需要引用这些成员时，Java编译器会生成一个符号引用。在运行阶段，这个符号引用一般都能够无歧义地定位到具体目标上。</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B7.jpg" alt></p>
+<p>此阶段有2个容易混淆的部分需要特别强调：</p>
+<p>该阶段进行内存分配的<strong>仅包括类变量（被static修饰的变量），不包括实例变量</strong>，实例变量将在对象初始化时随对象一起分配在堆内存中 这里所说的初始值“通常情况下”是指数据类型的零值 假设一个类变量的定义为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">public static int value = 123；</span><br></pre></td></tr></table></figure>
+
+<p>那变量value在准备阶段过后的初始化值为0而不是123，因为这是尚未开始执行任何Java方法，而把value赋值为123的putstatic指令是程序被编译后存放在类构造器()方法之中，所以把value赋值为123的动作将在初始化阶段才会执行。</p>
+<p>上面提到的在“通常情况”下初始值为零值，但还是会有一些特殊情况，如下：</p>
+<p>类字段的字段属性表中存在ConstantValue属性（只有同时被final和static修饰的字段才有ConstantValue属性），那在准备阶段变量value就会被初始化微ConstantValue属性所指定的值。编译时Javac将会为vaue生成ConstantValue属性，在准备阶段虚拟机就会根据ConstantValue的设置将value赋值为123。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">public final static int value = 123；</span><br></pre></td></tr></table></figure>
+
+<h3 id="步骤4：解析"><a href="#步骤4：解析" class="headerlink" title="步骤4：解析"></a>步骤4：解析</h3><p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B6.jpg" alt></p>
+<p><strong>解析阶段是虚拟机将常量池中的符号引用替换为直接引用的过程</strong></p>
+<ul>
+<li><p>符号引用 （Symbolic References）：符号引用以一组符号来描述所引用的目标，符号可以是任何形式的字面量，只要使用时能无歧义地定位到目标即可。 符号引用与虚拟机实现的内存布局无关，引用的目标并不一定已经加载到内存中。各种虚拟机实现的内存布局可以各不相同，但是它们能接受的符号引用必须一致，因为符号引用的字面量形式明确定义在Java虚拟机规范的Class文件格式中。</p>
+</li>
+<li><p>直接引用（Direct Refenrences）：直接引用可以是直接目标的指针、相对偏移量或是一个能间接定位到目标的句柄。 直接引用是和虚拟机实现的内存布局有关的，同一个符号引用在不同虚拟机实例上翻译出来的直接引用一般不会相同。如果有了直接引用，那么引用的目标必定已经在内存中存在</p>
+</li>
+</ul>
+<hr>
+<p>对同一个符号引用进行多次解析请求是很常见的事情，虚拟机实现可以对第一次解析的结果进行缓存（在运行时常量池中记录直接引用，并把常量标识为已解析状态）从而避免解析动作重复进行。但对于invokedynamic指令，上面规则则不成立。当碰到某个前面已经由invokedynamic指令触发过解析的符号引用时，并不意味着这个解析结果对其他invokedynamic指令也同样生效。因为invokedynamic指令是JDK1.7新加入的指令，目的用于动态语言支持，它所对应的引用称为“动态调用点限定符”（Dynamic Call Site Specifier），这里“动态”的含义就是必须等到程序实际运行到这条指令的时候，解析动作才能进行。相对的，其余可触发解析的指令都是“静态”的，可以在刚刚完成加载阶段，还没有执行代码时就进行解析。解析动作主要针对类或接口、字段、类方法、接口方法、方法类型、方法句柄和调用点限定符7类符号进行引用，下面只对前4种引用的解析过程进行介绍，对于后面3种与JDK1.7新增的动态语言支持息息相关。</p>
+<ol>
+<li>类或接口解析：假设当前代码所处的类为D，如果要把一个从未解析过的符号引用N解析为一个类或接口C的直接引用，那虚拟机完成这个解析的过程需要以下3个步骤</li>
+</ol>
+<ul>
+<li>C不是一个数组类型，虚拟机会把代表N的全限定名传递给D的类加载器去加载这个类C。在加载过程中，由于元数据验证、字节码验证的需要，有可能触发其他相关类的加载动作。</li>
+<li>如果C是一个数组类型，并且数组的元素类型为对象，例如N是“[Ljava/lang/Integer”的形式，那将会按照第1点的规则加载数组元素类型，如果N的描述符是前面那样，需要加载的元素类型就是“java.lang,Integer”，接着由虚拟机生一个代表此数组维度和元素的数组对象。</li>
+<li>如果上面的步骤没有出现异常，C已经在虚拟机中成为了一个有效的类和接口了，但是解析完成之前还有进行符号引用验证，确保D是否具备对C的访问权限。</li>
+</ul>
+<ol start="2">
+<li>字段解析：要解析字段符号引用，首先要对字段表内字段所属的类或接口的符号引用进行解析，如果解析成功，那这个字段所属的类或接口用C表示，虚拟机规范要求安好如下步骤对C进行后续字段的搜索</li>
+</ol>
+<ul>
+<li>如果C本身就包含了简单名称和字段描述符都与目标相匹配的字段，则返回这个字段的直接引用，查找结束</li>
+<li>否则如果在C中实现了接口，将会按照继承关系从下往上递归搜索各个接口和它的父接口，如果接口中包含了简单名称和字段描述符都与目标相匹配的字段，则返回这个字段的直接引用，查找结束</li>
+<li>否则，如果C不是java.lang.Object的话，将会按照继承关系从下往上递归搜索其父类，如果父类包含了简单名称和字段描述符都与目标相匹配的字段，则返回这个字段的直接引用，查找结束</li>
+<li>否则查找失败，抛出异常java.lang.NoSuchMethodError</li>
+<li>如果上面的步骤没有出现异常，但是解析完成之前还有进行符号引用验证，确保是否具备对字段的访问权限。</li>
+</ul>
+<ol start="3">
+<li>类方法解析：要解析类方法符号引用，首先要对类方法表中方法所属的类或接口的符号引用进行解析，如果解析成功，那这个方法所属的类或接口用C表示，虚拟机规范要求安好如下步骤对C进行后续类方法的搜索</li>
+</ol>
+<ul>
+<li>类方法和接口房符号引用的常量类型定义是分开的，如果在类方法表中发现class_index中索引的C是个接口，直接抛出java.lang.IncompatibleClassChangeError异常</li>
+<li>如果C本身就包含了简单名称和描述符都与目标相匹配的方法，则返回这个方法的直接引用，查找结束</li>
+<li>否则，在C的父类中递归查找，如果父类包含了简单名称和描述符都与目标相匹配的方法，则返回这个方法的直接引用，查找结束</li>
+<li>在类C实现的接口列表及它们的父接口之中递归查找是否有简单名称和描述符都与目标相匹配的方法， 如果存在匹配的方法，说明类C是一个抽象类，这时查找结束，抛出java.lang,AbstractMethodError异常 这个需要这么理解,如果是普通的类去实现某一个接口的方法的话,那么它肯定在第(2)步已经直接返回.如果能执行到第(4)步,则说明C本身的常量池中并没有对应的直接引用.那么只能是说明这个方法是抽象方法.包含抽象方法的类必定是抽象类,所以这里有个结论就是C是抽象类.</li>
+<li>否则查找失败，抛出异常java.lang.NoSuchMethodError</li>
+<li>如果上面的步骤没有出现异常，但是解析完成之前还有进行符号引用验证，确保是否具备对方法的访问权限。</li>
+</ul>
+<ol start="4">
+<li>接口方法解析：要解析接口方法符号引用，首先要对接口方法表中方法所属的类或接口的符号引用进行解析，如果解析成功，那这个方法所属接口用C表示，虚拟机规范要求安好如下步骤对C进行后续类方法的搜索</li>
+</ol>
+<ul>
+<li>类方法和接口房符号引用的常量类型定义是分开的，如果在类方法表中发现class_index中索引的C是个类而不是接口，直接抛出java.lang.IncompatibleClassChangeError异常</li>
+<li>如果C本身就包含了简单名称和描述符都与目标相匹配的方法，则返回这个方法的直接引用，查找结束</li>
+<li>否则，在C的父接口中递归查找，直到找到java.lang.Object类位置。如果包含了简单名称和描述符都与目标相匹配的方法，则返回这个方法的直接引用，查找结束</li>
+<li>否则查找失败，抛出异常java.lang.NoSuchMethodError 接口中方法默认都是public的，因此不存在访问权限的事</li>
+</ul>
+<p><em>符号引用就是一个类中（当然不仅是类，还包括类的其他部分，比如方法，字段等），引入了其他的类，可是JVM并不知道引入的其他类在哪里，所以就用唯一符号来代替，等到类加载器去解析的时候，就把符号引用找到那个引用类的地址，这个地址也就是直接引用。</em></p>
+<h2 id="步骤5：初始化"><a href="#步骤5：初始化" class="headerlink" title="步骤5：初始化"></a>步骤5：初始化</h2><p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B9.jpg" alt></p>
+<p><strong>将一个类中所有被static关键字标识的代码统一执行一遍，如果执行的是静态变量，那么就会使用用户指定的值覆盖之前在准备阶段设置的初始值；如果执行的是static代码块，那么在初始化阶段，JVM就会执行static代码块中定义的所有操作。</strong></p>
+<p>在 Java 代码中，如果要初始化一个静态字段，我们可以在声明时直接赋值，也可以在静态代码块中对其赋值。 如果直接赋值的静态字段被 final 所修饰，并且它的类型是基本类型或字符串时，那么该字段便会被 Java 编译器标记成常量值（ConstantValue），其初始化直接由 Java 虚拟机完成。 除此之外的直接赋值操作，<em>以及所有静态代码块中的代码，则会被 Java 编译器置于同一方法中，并把它命名为 &lt; clinit &gt;</em>。 类加载的最后一步是初始化，便是为标记为常量值的字段赋值，以及执行 &lt; clinit &gt; 方法的过程。Java 虚拟机会通过加锁来确保类的 &lt; clinit &gt; 方法仅被执行一次。</p>
+<ul>
+<li>()方法是有编译器自动收集类中的所有类变量的赋值动作和静态语句块（static{}块）中的语句合并产生的，编译器收集的顺序是有语句在源文件中出现的顺序所决定的，静态语句块中只能访问到定义在静态语句之前的变量，定义在它之后的变量，在前面的静态语句块可以赋值，但不能访问。</li>
+<li>()方法与类的构造函数（或者说实例构造器()方法）不同，它不需要显示地调用父类构造器，虚拟机会保证在子类的()方法执行之前，父类的()方法已经执行完毕；</li>
+<li>由于父类的()方法先执行，也就意味着父类中定义的静态语句块要优先于子类的变量赋值操作；</li>
+<li>()方法对于类和接口来说并不是必须的，如果一个类中没有静态语句块，也没有对变量的赋值操作，那么编译器可以不为这个类生成()方法；</li>
+<li>接口中不能使用静态语句块，但仍然有变量初始化的赋值操作，因此接口与类一样都会生成()方法。但接口与类不同的是，执行接口的()方法不需要先执行父接口的()方法。只有当父接口中定义的变量使用时，父接口才会初始化。另外，接口的实现类在初始化时也一样不会执行接口的()方法。</li>
+<li>虚拟机会保证一个类的()方法在多线程环境中被正确地加锁、同步，如果多个线程同时去初始化一个类，那么只会有一个线程去执行这个类的()方法，其他线程都需要阻塞等待，直到活动线程执行()方法完毕。如果一个类的()方法中有耗时很长的操作，就可能造成多个进程阻塞。</li>
+</ul>
+<p>那么，类的初始化何时会被触发呢？JVM 规范枚举了下述多种触发情况：</p>
+<ol>
+<li>当虚拟机启动时，初始化用户指定的主类；</li>
+<li>当遇到用以新建目标类实例的 new 指令时，初始化 new 指令的目标类；</li>
+<li>当遇到调用静态方法的指令时，初始化该静态方法所在的类；</li>
+<li>当遇到访问静态字段的指令时，初始化该静态字段所在的类；</li>
+<li>子类的初始化会触发父类的初始化；</li>
+<li>如果一个接口定义了 default 方法，那么直接实现或者间接实现该接口的类的初始化，会触发该接口的初始化；</li>
+<li>使用反射 API 对某个类进行反射调用时，初始化这个类；</li>
+<li>当初次调用 MethodHandle 实例时，初始化该 MethodHandle 指向的方法所在的类。</li>
+</ol>
+<h3 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">class Singleton&#123;</span><br><span class="line">    private static Singleton singleton = new Singleton();</span><br><span class="line">    public static int value1;</span><br><span class="line">    public static int value2 = 0;</span><br><span class="line"></span><br><span class="line">    private Singleton()&#123;</span><br><span class="line">        value1++;</span><br><span class="line">        value2++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static Singleton getInstance()&#123;</span><br><span class="line">        return singleton;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Singleton2&#123;</span><br><span class="line">    public static int value1;</span><br><span class="line">    public static int value2 = 0;</span><br><span class="line">    private static Singleton2 singleton2 = new Singleton2();</span><br><span class="line"></span><br><span class="line">    private Singleton2()&#123;</span><br><span class="line">        value1++;</span><br><span class="line">        value2++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static Singleton2 getInstance2()&#123;</span><br><span class="line">        return singleton2;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public static void main(String[] args) &#123;</span><br><span class="line">        Singleton singleton = Singleton.getInstance();</span><br><span class="line">        System.out.println(&quot;Singleton1 value1:&quot; + singleton.value1);</span><br><span class="line">        System.out.println(&quot;Singleton1 value2:&quot; + singleton.value2);</span><br><span class="line"></span><br><span class="line">        Singleton2 singleton2 = Singleton2.getInstance2();</span><br><span class="line">        System.out.println(&quot;Singleton2 value1:&quot; + singleton2.value1);</span><br><span class="line">        System.out.println(&quot;Singleton2 value2:&quot; + singleton2.value2);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line"> //说出运行的结果： </span><br><span class="line">Singleton1 value1 : 1 </span><br><span class="line">Singleton1 value2 : 0 </span><br><span class="line">Singleton2 value1 : 1 </span><br><span class="line">Singleton2 value2 : 1</span><br></pre></td></tr></table></figure>
+
+<h3 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h3><p>Singleton输出结果：1 0<br>原因：</p>
+<ol>
+<li>首先执行main中的Singleton singleton = Singleton.getInstance(); </li>
+<li>类的加载：加载类Singleton </li>
+<li>类的验证 </li>
+<li>类的准备：为静态变量分配内存，设置默认值。这里为singleton(引用类型)设置为null,value1,value2（基本数据类型）设置默认值0 </li>
+<li>类的初始化（按照赋值语句进行修改）： </li>
+</ol>
+<p>执行private static Singleton singleton = new Singleton(); </p>
+<p>先执行Singleton的构造器：</p>
+<p>value1++;</p>
+<p>value2++; </p>
+<p>此时value1，value2均等于1 </p>
+<p>再执行 </p>
+<p>public static int value1; </p>
+<p>public static int value2 = 0; </p>
+<p>此时value1=1，value2=0</p>
+<p>Singleton2输出结果：1 1 </p>
+<p>原因：</p>
+<ol>
+<li>首先执行main中的Singleton2 singleton2 = Singleton2.getInstance2(); </li>
+<li>类的加载：加载类Singleton2 </li>
+<li>类的验证 </li>
+<li>类的准备：为静态变量分配内存，设置默认值。这里为value1,value2（基本数据类型）设置默认值0,singleton2(引用类型)设置为null, </li>
+<li>类的初始化（按照赋值语句进行修改）： </li>
+</ol>
+<p>执行 </p>
+<p>public static int value2 = 0; </p>
+<p>此时value2=0(value1不变，依然是0); </p>
+<p>执行 </p>
+<p>private static Singleton singleton = new Singleton(); </p>
+<p>执行Singleton2的构造器：value1++;value2++; </p>
+<p>此时value1，value2均等于1,即为最后结果</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/笔记/" rel="tag"># 笔记</a>
+          
+            <a href="/tags/JVM/" rel="tag"># JVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/10/看书笔记/深入理解Java虚拟机/6、类文件结构/" rel="next" title="6、类文件结构">
+                <i class="fa fa-chevron-left"></i> 6、类文件结构
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/10/看书笔记/深入理解Java虚拟机/8、类加载器与双亲委派模型/" rel="prev" title="8、类加载器与双亲委派模型">
+                8、类加载器与双亲委派模型 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Wfc</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">20</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/wfc1994" title="GitHub &rarr; https://github.com/wfc1994" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:779481237@qq.com" title="E-Mail &rarr; mailto:779481237@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://weibo.com/u/3183050825" title="Weibo &rarr; https://weibo.com/u/3183050825" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>Weibo</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="/“”" title="wszgkm &rarr; “”"><i class="fa fa-fw fa-weixin"></i>wszgkm</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1、类加载的本质"><span class="nav-number">1.</span> <span class="nav-text">1、类加载的本质</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2、类加载过程"><span class="nav-number">2.</span> <span class="nav-text">2、类加载过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤1：加载（加载到方法区）"><span class="nav-number">2.1.</span> <span class="nav-text">步骤1：加载（加载到方法区）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤2：验证"><span class="nav-number">2.2.</span> <span class="nav-text">步骤2：验证</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤3：准备"><span class="nav-number">2.3.</span> <span class="nav-text">步骤3：准备</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤4：解析"><span class="nav-number">2.4.</span> <span class="nav-text">步骤4：解析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#步骤5：初始化"><span class="nav-number">3.</span> <span class="nav-text">步骤5：初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#例子"><span class="nav-number">3.1.</span> <span class="nav-text">例子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分析"><span class="nav-number">3.2.</span> <span class="nav-text">分析</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-wfc"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Wfc</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    
+    
+  
+  <script color="0,0,255" opacity="0.5" zindex="-1" count="99" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
