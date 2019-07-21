@@ -357,6 +357,256 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://wfc1994.github.io/2019/06/29/看书笔记/深入理解Java虚拟机/3、判断对象是否存活/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Wfc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="只想当扫地机器人的老王">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/06/29/看书笔记/深入理解Java虚拟机/3、判断对象是否存活/" class="post-title-link" itemprop="url">3、判断对象是否存活</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-06-29 23:47:20 / 修改时间：23:46:52" itemprop="dateCreated datePublished" datetime="2019-06-29T23:47:20+08:00">2019-06-29</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/" itemprop="url" rel="index"><span itemprop="name">看书笔记</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/深入理解Java虚拟机/" itemprop="url" rel="index"><span itemprop="name">深入理解Java虚拟机</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="1-判断方式与方法"><a href="#1-判断方式与方法" class="headerlink" title="1. 判断方式与方法"></a>1. 判断方式与方法</h2><p>垃圾收集器对 Java堆里的对象 是否进行回收的判断准则：</p>
+<p>Java对象是存活 or 死亡：判断对象为死亡才会进行回收</p>
+<p>在Java虚拟机中，判断对象是否存活有2种方法：</p>
+<ul>
+<li>引用计数法</li>
+<li>引用链法（可达性分析法）</li>
+</ul>
+<h3 id="1-1-引用计数法"><a href="#1-1-引用计数法" class="headerlink" title="1.1. 引用计数法"></a>1.1. 引用计数法</h3><h4 id="方法描述"><a href="#方法描述" class="headerlink" title="方法描述"></a>方法描述</h4><p>给 Java 对象添加一个引用计数器，每当有一个地方引用它时，计数器 +1；引用失效则 -1；</p>
+<h4 id="判断对象存活准则"><a href="#判断对象存活准则" class="headerlink" title="判断对象存活准则"></a>判断对象存活准则</h4><p>当计数器不为 0 时，判断该对象存活；否则判断为死亡（计数器 = 0）。</p>
+<h4 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h4><p>实现简单、判断高效</p>
+<h4 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h4><p>无法解决对象间<strong>相互循环引用</strong>的问题 : 即该算法存在判断逻辑的漏洞</p>
+<p>背景</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// 对象objA 和 objB 都有字段 name</span><br><span class="line">// 两个对象相互进行引用，除此之外这两个人对象没有任何引用</span><br><span class="line">objA.name = objB；</span><br><span class="line">objB.name = objA；</span><br></pre></td></tr></table></figure>
+
+<p>问题</p>
+<p>实际上这两个对象已经不可能再被访问，应该要被垃圾收集器进行回收</p>
+<p>但因为他们相互引用，所以导致计数器不为0，这导致引用计数算法无法通知垃圾收集器回收该两个对象</p>
+<p>++正由于该算法存在判断逻辑漏洞，所以Java虚拟机没有采用该算法判断Java是否存活++。</p>
+<h3 id="2-2、引用链法（可达性分析法）"><a href="#2-2、引用链法（可达性分析法）" class="headerlink" title="2.2、引用链法（可达性分析法）"></a>2.2、引用链法（可达性分析法）</h3><p>很多主流商用语言（如Java、C#）都采用引用链法判断Java对象是否存活。</p>
+<p>含3个步骤：</p>
+<ol>
+<li>可达性分</li>
+<li>析第一次标记 &amp; 筛选</li>
+<li>第二次标记 &amp; 筛选</li>
+</ol>
+<h4 id="2-2-1-可达性分析"><a href="#2-2-1-可达性分析" class="headerlink" title="2.2.1 可达性分析"></a>2.2.1 可达性分析</h4><p>方法描述</p>
+<p>将一系列的 GC Roots 对象作为起点，从这些起点开始向下搜索。</p>
+<p>可作为 GC Root 的对象有：</p>
+<ul>
+<li>Java虚拟机栈（栈帧的本地变量表）中引用的对象</li>
+<li>本地方法栈 中 JNI引用对象</li>
+<li>方法区 中常量、类静态属性引用的对象</li>
+</ul>
+<p>Java 进行GC的时候会从GC root进行可达性判断，常见的GC Root有如下：</p>
+<ol>
+<li>Class - 由系统类加载器(system class loader)加载的对象，这些类是不能够被回收的，他们可以以静态字段的方式保存持有其它对象。我们需要注意的一点就是，通过用户自定义的类加载器加载的类，除非相应的java.lang.Class实例以其它的某种（或多种）方式成为roots，否则它们并不是roots，.</li>
+<li>Thread - 活着的线程</li>
+<li>Stack Local - Java方法的local变量或参数</li>
+<li>JNI Local - JNI方法的local变量或参数</li>
+<li>JNI Global - 全局JNI引用</li>
+<li>Monitor Used - 用于同步的监控对象</li>
+<li>Held by JVM - 用于JVM特殊目的由GC保留的对象，但实际上这个与JVM的实现是有关的。可能已知的一些类型是：系统类加载器、一些JVM知道的重要的异常类、一些用于处理异常的预分配对象以及一些自定义的类加载器等。然而，JVM并没有为这些对象提供其它的信息，因此需要去确定哪些是属于”JVM持有”的了。</li>
+</ol>
+<p>向下搜索的路径 = 引用链</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%9B%98%E5%AF%B9%E5%AF%B9%E8%B1%A1%E6%98%AF%E5%90%A6%E5%AD%98%E6%B4%BB1.png" alt></p>
+<p><strong>判断对象是否可达标准</strong></p>
+<p>当一个对象到 GC Roots没有任何引用链相连时，则判断该对象不可达，比如上图右边的形式。</p>
+<p>没有任何引用链相连 = GC Root到对象不可达 = 对象不可用</p>
+<p><strong>注意：Java9中已经明确弃用了finalize方法</strong></p>
+<p>为什么呢？简单说，你无法保证finalize什么时候执行，执行的是否符合预期。使用不当会影响 性能，导致程序死锁、挂起等。千万不要指望 finalize 去承担资源释放的主要职责，多让finalize作为后的“守门员”（也就是如下的行为两次标记筛选）</p>
+<p>++可达性分析 仅仅只是判断对象是否可达，但还不足以判断对象是否存活 / 死亡，++<br>当在 可达性分析 中判断不可达的对象，只是“被判刑” = 还没真正死亡<br>不可达对象会被放在”即将回收“的集合里。</p>
+<p>要判断一个对象真正死亡，还需要经历两个阶段：</p>
+<p>第一次标记 &amp; 筛选 finalize方法存在</p>
+<p>第二次标记 &amp; 筛选</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%88%A4%E6%96%AD%E5%AF%B9%E8%B1%A1%E6%98%AF%E5%90%A6%E5%AD%98%E6%B4%BB2.png" alt></p>
+<h4 id="2-2-2-第一次标记-amp-筛选"><a href="#2-2-2-第一次标记-amp-筛选" class="headerlink" title="2.2.2 第一次标记 &amp; 筛选"></a>2.2.2 第一次标记 &amp; 筛选</h4><p>对象在可达性分析中被判断为不可达后，会被第一次标记 &amp; 准备被筛选</p>
+<p>方法描述</p>
+<ol>
+<li>不筛选：继续留在 ”即将回收“的集合里，等待回收；</li>
+<li>筛选：从 ”即将回收“的集合取出</li>
+</ol>
+<p>筛选标准</p>
+<ul>
+<li>该对象是否有必要执行 finalize()方法</li>
+<li>若有必要执行（人为设置），则筛选出来，进入下一阶段（第二次标记 &amp; 筛选）；</li>
+<li>若没必要执行，判断该对象死亡，不筛选 并等待回收</li>
+<li>当对象无 finalize()方法 或 finalize()已被虚拟机调用过，则视为“没必要执行”</li>
+</ul>
+<h4 id="2-2-3-第二次标记-amp-筛选"><a href="#2-2-3-第二次标记-amp-筛选" class="headerlink" title="2.2.3 第二次标记 &amp; 筛选"></a>2.2.3 第二次标记 &amp; 筛选</h4><p>当对象经过了第一次的标记 &amp; 筛选，会被进行第二次标记 &amp; 准备被进行 筛选</p>
+<p>方法描述</p>
+<p>该对象会被放到一个 F-Queue 队列中，并由 虚拟机自动建立、优先级低的Finalizer 线程去执行 队列中该对象的finalize()，finalize()只会被执行一次，但并不承诺等待finalize()运行结束。这是为了防止 finalize()执行缓慢 / 停止 使得 F-Queue队列其他对象永久等待。</p>
+<p>筛选标准</p>
+<p>在执行finalize()过程中，若对象依然没与引用链上的GC Roots直接关联或间接关联（即关联上与GC Roots 关联的对象），那么该对象将被判断死亡，不筛选（留在”即将回收“集合里）并等待回收</p>
+<h2 id="3、引用相关"><a href="#3、引用相关" class="headerlink" title="3、引用相关"></a>3、引用相关</h2><p>不管是引用计数还是可达性分析，都和引用有关。 Java中引用包括：</p>
+<h3 id="1、强引用"><a href="#1、强引用" class="headerlink" title="1、强引用"></a>1、强引用</h3><p>最普遍的引用，只要强引用存在，对象肯定不会被回收。</p>
+<p>++obj就是强引用。通过关键字new 创建的对象所关联的引用就是强引用++。 当JVM内存空间不足，JVM宁愿抛出OutOfMemory Error运行时错误（OOM），使程序异常终止，也不会靠随意回收具有强引用的“存活”对 象来解决内存不足的问题。对于一个普通的对象，如果没有其他的引用关系，只要超过了引 用的作用域或者显式地将相应（强）引用赋值为 null，就是可以被垃圾收集的了，具体回收 时机还是要看垃圾收集策略。</p>
+<h3 id="2、软引用"><a href="#2、软引用" class="headerlink" title="2、软引用"></a>2、软引用</h3><p>描述有用但并非必需的对象，当内存不足时，就会回收这些对象。Java中提供SoftReference类。 一般用于内存敏感的高速缓存中。</p>
+<p>图片缓存框架中，“内存缓存”中的图片是以这种引用来保存，使得JVM在发生 OOM之前，可以回收这部分缓存</p>
+<h3 id="3、弱引用"><a href="#3、弱引用" class="headerlink" title="3、弱引用"></a>3、弱引用</h3><p>描述非必需对象，强度比软引用更弱。在垃圾回收器线程扫描它所管辖的内存区域的过程中，一旦发现了只具有弱引用的对象，不管当前内存空间足够与否，都会回收它的内存。不过，由于垃圾回收器是一个优先级很低的线程，因此不一定会很快发现那些只具有弱引用的对象。Java中提供WeakReference类。</p>
+<p>在静态内部类中，经常会使用虚引用。例如，一个类发送网络请求，承担callbac k的静态内部类，则常以虚引用的方式来保存外部类(宿主类)的引用，当外部类需要被JVM回 收时，不会因为网络请求没有及时回来，导致外部类不能被回收，引起内存泄漏</p>
+<h4 id="4、虚引用"><a href="#4、虚引用" class="headerlink" title="4、虚引用"></a>4、虚引用</h4><p>又称幽灵引用或幻影引用，最弱的一种引用关系。虚引用对对象的生命周期不会有任何影响，不能通过虚引用取得对象的实例。唯一的目的是，设置虚引用的对象在被回收时会收到</p>
+<p>应用场景：可用来跟踪对象被垃圾回收器回收的活动，当一个虚引用关联的对象被垃圾收集 器回收之前会收到一条系统通知。</p>
+<p>这种引用的get()方法返回总是null，所以，可以想象，在平常的项目开发肯定 用的少。但是根据这种引用的特点，我想可以通过监控这类引用，来进行一些垃圾清理的动作。可以参考jdk内部cleaner使用<br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%88%A4%E6%96%AD%E5%AF%B9%E8%B1%A1%E6%98%AF%E5%90%A6%E5%AD%98%E6%B4%BB3.png" alt></p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://wfc1994.github.io/2019/06/29/看书笔记/深入理解Java虚拟机/1、Java内存区域与内存溢出异常/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -861,7 +1111,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">22</span>
+                    <span class="site-state-item-count">23</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>

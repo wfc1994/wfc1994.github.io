@@ -357,6 +357,320 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://wfc1994.github.io/2019/07/10/看书笔记/深入理解Java虚拟机/4、垃圾收集算法/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Wfc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="只想当扫地机器人的老王">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/07/10/看书笔记/深入理解Java虚拟机/4、垃圾收集算法/" class="post-title-link" itemprop="url">4、垃圾收集算法</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-10 07:57:02" itemprop="dateCreated datePublished" datetime="2019-07-10T07:57:02+08:00">2019-07-10</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-07-01 16:44:46" itemprop="dateModified" datetime="2019-07-01T16:44:46+08:00">2019-07-01</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/" itemprop="url" rel="index"><span itemprop="name">看书笔记</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/深入理解Java虚拟机/" itemprop="url" rel="index"><span itemprop="name">深入理解Java虚拟机</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>当JVM空闲时，自动回收每块可能被回收的内存，GC是完全自动的，不能被强制执行。程序员最多只能用System.gc()来建议执行垃圾回收器回收内存，但是具体的回收时间，是不可知的。</p>
+<h2 id="1-标记-清除算法"><a href="#1-标记-清除算法" class="headerlink" title="1. 标记-清除算法"></a>1. 标记-清除算法</h2><p>这是 垃圾收集算法中 最最基础的算法。</p>
+<h3 id="1-1-算法思想"><a href="#1-1-算法思想" class="headerlink" title="1.1 算法思想"></a>1.1 算法思想</h3><p>算法分为两个阶段：</p>
+<p>标记阶段：标记出所有需要回收的对象；<br>清除阶段：统一清除（回收）所有被标记的对象。<br>下面主要讲解标记阶段。标记阶段主要分为：（先进行可达性分析）</p>
+<p>第一次标记 &amp; 筛选 执行finalize<br>第二次标记 &amp; 筛选 放入F队列，F队列中的对象是否重新连接</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%88%A4%E6%96%AD%E5%AF%B9%E8%B1%A1%E6%98%AF%E5%90%A6%E5%AD%98%E6%B4%BB2.png" alt></p>
+<h3 id="1-2-优点"><a href="#1-2-优点" class="headerlink" title="1.2 优点"></a>1.2 优点</h3><p>算法简单、实现简单</p>
+<h3 id="1-3-缺点"><a href="#1-3-缺点" class="headerlink" title="1.3 缺点"></a>1.3 缺点</h3><p>效率问题：即标记和清除两个过程效率不高<br>空间问题：标记 - 清除后，会产生大量不连续的内存碎片。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%952.png" alt></p>
+<p><em>这导致 以后程序 需要分配较大空间对象时无法找到足够大的连续内存而被迫触发另外一次垃圾收集行为，这导致非常浪费资源。</em></p>
+<h3 id="1-4-应用场景"><a href="#1-4-应用场景" class="headerlink" title="1.4 应用场景"></a>1.4 应用场景</h3><p>对象存活率较低 &amp; 垃圾回收行为频率低 的场景</p>
+<p>如老年代区域，因为老年代区域回收频次少、回收数量少，所以对于效率问题 &amp; 空间问题不会很明显。</p>
+<h2 id="2、复制算法"><a href="#2、复制算法" class="headerlink" title="2、复制算法"></a>2、复制算法</h2><p>该算法的出现是为了解决 标记-清除算法中 效率 &amp; 空间问题的。</p>
+<h3 id="2-1-算法思想"><a href="#2-1-算法思想" class="headerlink" title="2.1 算法思想"></a>2.1 算法思想</h3><ul>
+<li>将内存分为大小相等的两块，每次使用其中一块；</li>
+<li>当使用的这块内存用完，就将 这块内存上还存活的对象 复制到另一块还没试用过的内存上</li>
+<li>最终将使用的那块内存一次清理掉</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%AE%97%E6%B3%953.png" alt></p>
+<h2 id="2-2-优点"><a href="#2-2-优点" class="headerlink" title="2.2 优点"></a>2.2 优点</h2><ol>
+<li>解决了标记-清除算法中 清除效率低的问题：每次仅回收内存的一半区域</li>
+<li>解决了标记-清除算法中 空间产生不连续内存碎片的问题：将已使用内存上的存活对象 移动到栈顶的指针，按顺序分配内存即可。</li>
+</ol>
+<h2 id="2-3-缺点"><a href="#2-3-缺点" class="headerlink" title="2.3 缺点"></a>2.3 缺点</h2><ul>
+<li>每次使用的内存缩小为原来的一半。</li>
+<li>当对象存活率较高的情况下需要做很多复制操作，即效率会变低</li>
+</ul>
+<h2 id="2-4-应用场景"><a href="#2-4-应用场景" class="headerlink" title="2.4 应用场景"></a>2.4 应用场景</h2><p>对象存活率较低 &amp; 需要频繁进行垃圾回收 的区域</p>
+<p>如新生代区域</p>
+<h2 id="2-5-特别注意"><a href="#2-5-特别注意" class="headerlink" title="2.5 特别注意"></a>2.5 特别注意</h2><p>a. 背景</p>
+<p>新生代区域在进行垃圾回收时，98%对象都必须得回收</p>
+<p>b. 问题</p>
+<p>复制算法中 每次使用的内存缩小为原来的一半 利用率低 &amp; 代价太高</p>
+<p>c. 解决方案</p>
+<p>不 按 1：1的比例 划分内存，而是 按8：1：1比例 将内存划分为一块较大的 Eden 和两块较小的 Survivor 区域（From Survivor、To Survivor）</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%954.png" alt></p>
+<ul>
+<li>每次使用Eden、From Survivor区域；</li>
+<li>用完后就 将上述两块区域存活的对象 复制到To Survivor区域上</li>
+<li>最终一次清理掉Eden、From Survivor区域使用逻辑 同 改进前</li>
+</ul>
+<p>很多同学会问，假如 Eden、From Survivor区域上存活对象所需内存大小 &gt; To Survivor区域怎么办？</p>
+<p>解决方案：<em>依赖老年代内存区域 做 内存分配担</em>。</p>
+<p>即To Survivor区域 存不下来的对象 会通过 内存分配担保机制 暂时保存在老年代</p>
+<h2 id="3、标记-整理算法"><a href="#3、标记-整理算法" class="headerlink" title="3、标记-整理算法"></a>3、标记-整理算法</h2><h3 id="3-1-算法思路"><a href="#3-1-算法思路" class="headerlink" title="3.1 算法思路"></a>3.1 算法思路</h3><p>算法分为三个阶段：</p>
+<ol>
+<li>标记阶段：标记出所有需要回收的对象；</li>
+<li>整理阶段：让所有存活的对象都向一端移动</li>
+<li>清除阶段：统一清除（回收）端以外的对象。</li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%955.png" alt></p>
+<h3 id="3-2-优点"><a href="#3-2-优点" class="headerlink" title="3.2 优点"></a>3.2 优点</h3><ul>
+<li>解决了标记-清除算法中 清除效率低的问题：一次清楚端外区域</li>
+<li>解决了标记-清除算法中 空间产生不连续内存碎片的问题：将已使用内存上的存活对象 移动到栈顶的指针，按顺序分配内存即可。</li>
+</ul>
+<h3 id="3-3-应用场景"><a href="#3-3-应用场景" class="headerlink" title="3.3 应用场景"></a>3.3 应用场景</h3><p>对象存活率较低 &amp; 垃圾回收行为频率低的场景</p>
+<p>如老年代区域，因为老年代区域回收频次少、回收数量少，所以对于效率问题 &amp; 空间问题不会很明显。</p>
+<h2 id="4-分代收集算法"><a href="#4-分代收集算法" class="headerlink" title="4. 分代收集算法"></a>4. 分代收集算法</h2><p>主流的虚拟机基本都采用该算法，下面会着重讲解。</p>
+<h3 id="4-1-算法思路"><a href="#4-1-算法思路" class="headerlink" title="4.1 算法思路"></a>4.1 算法思路</h3><p>逐一标记和压缩 Java 虚拟机里的所有对象非常低效：分配的对象越多，垃圾回收需时就越久。不过，根据统计，大部分的对象，其实用没多久就不用了。根据之前的规律，就可以用来提升 JVM 的效率了。方法是，把堆分成几个部分（就是所谓的分代），分别是<em>新生代、老年代，以及永生代</em>.</p>
+<p>根据 对象存活周期的不同 将 Java堆内存 分为：新生代 &amp; 老年代 。分配比例如下：</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%9566.png" alt></p>
+<p><em>老年代存活率高使用标记整理或者标记清除，年轻代少量存活使用复制算法</em></p>
+<p>特别注意</p>
+<p>有时候survivor被称为From Survivor和To Survivor，他们之间会经常互换角色：每次发生GC时，把Eden区和 From Survivor区中 存活且没超过年龄阈值的对象 复制到To Survivor区中（此时To Survivor变成了From Survivor），然后From Survivor清空（此时From Survivor变成了To Survivor）</p>
+<p>两块区域特点 选择 对应的垃圾收集算法（即上面介绍的算法），具体细节请看下图</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%957.png" alt></p>
+<h3 id="4-2-具体存储过程"><a href="#4-2-具体存储过程" class="headerlink" title="4.2 具体存储过程"></a>4.2 具体存储过程</h3><p>新对象会被分配在新生代内存。一旦新生代内存满了，就会开始对死掉的对象，进行所谓的小型垃圾回收过程。一片新生代内存里，死掉的越多，回收过程就越快；至于那些还活着的对象，此时就会老化，并最终老到进入老年代内存。</p>
+<p>Stop the World 事件 —— <em>小型垃圾回收属于一种叫 “Stop the World” 的事件。在这种事件发生时，所有的程序线程都要暂停，直到事件完成（比如这里就是完成了所有回收工作）为止（停止也不是随意停止，当到达安全点的时候暂停，OopMap才会记录信息）。停顿的时候不是全部遍历，这样太麻烦了。而是枚举根节点时，递归遍历每个栈帧的 OopMap（数据结构） ，通过栈中记录的被引用对象的内存地址，即可找到这些对象（ GC Roots ）</em>。这是执行的线程，如果线程不执行，那么在<em>安全区域</em>内开始GC是安全的。</p>
+<p>老年代用来保存长时间存活的对象。通常，设置一个阈值，当达到该年龄时，年轻代对象会被移动到老年代。最终老年代也会被回收。这个事件成为 Major GC。</p>
+<p>Major GC 也会触发STW（Stop the World）。通常，Major GC会慢很多，因为它涉及到所有存活对象。所以，对于响应性的应用程序，应该尽量避免Major GC。还要注意，Major GC的STW的时长受年老代垃圾回收器类型的影响。</p>
+<p>永久代包含JVM用于描述应用程序中类和方法的元数据。永久代是由JVM在运行时根据应用程序使用的类来填充的。此外，Java SE类库和方法也存储在这里。</p>
+<p>如果JVM发现某些类不再需要，并且其他类可能需要空间，则这些类可能会被回收。</p>
+<p>介绍</p>
+<ol>
+<li>新建的对象 一般会被优先分配到新生代的Eden区、From Survivor区</li>
+<li>大对象（如很长的字符串以及数组）会直接分配到老年代，这是为了避免在 Eden 区 和 Survivor区之间发生大量的内存复制（因为新生代会采用复制算法进行垃圾收集）</li>
+<li>这些对象经过第一次 Minor GC后，若仍然存活，将会被移到To Survivor区</li>
+<li>一次清理掉Eden、From Survivor区域</li>
+<li>在 To Survivor 区每经过一轮 Minor GC ，该对象的年龄就+1</li>
+<li>当对象年龄达到一定时(阈值默认=15)，就会被移动到老年代。</li>
+</ol>
+<ul>
+<li>即新生代的对象在存活一定时间后，会被移动存储到老年代区域。</li>
+<li>还有一种 新生代对象被移懂到老年代区域 的情况是：动态对象年龄判定。即如果在Survivor区中 所有相同年龄对象的大小总和 大于Survivor区内存大小一半时，所有大于或等于该年龄的对象都会直接进入老年代。</li>
+</ul>
+<h4 id="世代垃圾收集过程"><a href="#世代垃圾收集过程" class="headerlink" title="世代垃圾收集过程"></a>世代垃圾收集过程</h4><p>首先，将任何新对象分配给 eden 空间。 两个 survivor 空间都是空的。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%958.png" alt></p>
+<p>当 eden 空间填满时，会触发轻微的垃圾收集。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%959.png" alt></p>
+<p>引用的对象被移动到第一个 survivor 空间。 清除 eden 空间时，将删除未引用的对象。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%9510.jpg" alt></p>
+<p>在下一次Minor GC中，Eden区也会做同样的操作。删除未被引用的对象，并将被引用的对象移动到Survivor区。然而，这里，他们被移动到了第二个Survivor区（S1）。</p>
+<p>此外，第一个Survivor区（S0）中，在上一次Minor GC幸存的对象，会增加年龄，并被移动到S1中。待所有幸存对象都被移动到S1后，S0和Eden区都会被清空。注意，Survivor区中有了不同年龄的对象。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%9511.jpg" alt></p>
+<p>在下一次Minor GC中，会重复同样的操作。不过，这一次Survivor区会交换。被引用的对象移动到S0,。幸存的对象增加年龄。Eden区和S1被清空。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%9512.jpg" alt></p>
+<p>在较小的GC之后，当老化的物体达到一定的年龄阈值（在该示例中为8）时，它们从年轻一代晋升到老一代。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%9513.jpg" alt></p>
+<p>随着较小的GC持续发生，物体将继续被推广到老一代空间。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%9514.png" alt></p>
+<p>所以这几乎涵盖了年轻一代的整个过程。最终，将主要对老一代进行GC，清理并最终压缩该空间。</p>
+<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%9515.png" alt></p>
+<h3 id="4-3-优点"><a href="#4-3-优点" class="headerlink" title="4.3 优点"></a>4.3 优点</h3><p>效率高、空间利用率高</p>
+<p>根据不同区域特点选择不同的垃圾收集算法</p>
+<h3 id="4-4-应用场景"><a href="#4-4-应用场景" class="headerlink" title="4.4 应用场景"></a>4.4 应用场景</h3><p>现在主流的虚拟机基本都采用 分代收集算法 ，即根据不同区域特点选择不同垃圾收集算法。</p>
+<p>新生代 区域：采用 复制算法</p>
+<p>老年代 区域：采用 标记-清除 算法、标记 - 整理 算法</p>
+<h3 id="4-5-GC-触发条件"><a href="#4-5-GC-触发条件" class="headerlink" title="4.5 GC 触发条件"></a>4.5 GC 触发条件</h3><p>Minor GC触发条件：</p>
+<p>当Eden区满时，触发Minor GC。</p>
+<p>Full GC触发条件：</p>
+<ol>
+<li>调用System.gc时，系统建议执行Full GC，但是不必然执行</li>
+<li>老年代空间不足</li>
+<li>方法去空间不足</li>
+<li>通过Minor GC后进入老年代的平均大小大于老年代的可用内存</li>
+<li>由Eden区、From Space区向To Space区复制时，对象大小大于To Space可用内存，则把该对象转存到老年代，且老年代的可用内存小于该对象大小</li>
+</ol>
+<h2 id="5、HotSpot算法实现"><a href="#5、HotSpot算法实现" class="headerlink" title="5、HotSpot算法实现"></a>5、HotSpot算法实现</h2><p>根据垃圾回收算法和判定对象存活的原理来实现HotSpot。</p>
+<p>1、枚举根节点 我们知道，对象可达性分析中GC Roots根节点主要包括栈和方法区所引用的对象。那么实际设计中如何逐个检查这些引用呢？</p>
+<p>为了保证准确性，显然我们在枚举根节点的时候，应该停止所有的Java用户线程。<br>（Stop-The-World，使整个分析过程，系统好像冻结到某个时间点），为了让这个时间尽量短（否则用户线程阻塞太久），主流的虚拟机都是采用准确式GC，并不需要挨个扫描方法栈，就可以得知哪些位置上存放着对象引用。这个又是如何实现的呢？</p>
+<p>在HotSpot的实现中，是使用一组称为<strong><em>OopMap的数据结构</em></strong>来达到这个目的的，在类加载完成的时候，HotSpot就把对象内什么偏移量上是什么类型的数据计算出来，在JIT编译过程中，也会在特定的位置记录下栈和寄存器中哪些位置是引用。这样，GC在扫描时就可以直接得知这些信息了。</p>
+<p><em>OopMap 记录了栈上本地变量到堆上对象的引用关系。</em></p>
+<p>其作用是：垃圾收集时，收集线程会对栈上的内存进行扫描，看看哪些位置存储了 Reference 类型。如果发现某个位置确实存的是 Reference 类型，就意味着它所引用的对象这一次不能被回收。但问题是，栈上的本地变量表里面只有一部分数据是 Reference 类型的（它们是我们所需要的），那些非 Reference 类型的数据对我们而言毫无用处，但我们还是不得不对整个栈全部扫描一遍，这是对时间和资源的一种浪费。 它的另外一个更根本的作用是，可以帮助 HotSpot 实现准确式 GC。</p>
+<p>2、安全点</p>
+<p>一个线程意味着一个栈，一个栈由多个栈帧组成，一个栈帧对应着一个方法，一个方法里面可能有多个安全点。</p>
+<p>gc 发生时，程序首先运行到最近的一个安全点停下来，然后更新自己的 OopMap ，记下栈上哪些位置代表着引用。</p>
+<p>枚举根节点时，递归遍历每个栈帧的OopMap，通过栈中记录的被引用对象的内存地址，即可找到这些对象（ GC Roots ）。</p>
+<p>前面我们知道了OopMap的概念，然而为每一条指令的位置都生成对应的OopMap显然不显示。前面提到的“特定位置”即安全点：程序执行并非所有地方都可以停下来GC，只有到达安全点才可以。</p>
+<p>关于安全点的选择？ 既不能让GC等待太久，也不能太过频繁增加负荷。 普通指令执行很快，一般遇到“长时间执行”的指令才会产生安全点，包括：方法调用、循环跳转等。</p>
+<p>GC时如何让所有线程跑到安全点再停下来？抢先式中断和主动式中断。</p>
+<p><em>抢先式中断</em>：一般不采用。GC时暂停所有线程，如果发现有线程没在安全点，则让它跑到安全点。</p>
+<p><em>主动式中断</em>：GC中断线程不直接对线程操作，而是设置一个中断标志位。线程在每一个安全点检查这个标志位即可。</p>
+<p>3、安全区域</p>
+<p>考虑一下，程序不执行的时候（没有分配到cpu时间片）如何跑到安全点呢？ 于是，提出了扩展的安全点——安全区域的概念。</p>
+<p>安全区域：一段代码中，对象引用没有发生变化，任何地方开始GC都是安全的。<br>当线程执行到安全区域时，首先标识自己已经进入安全区域，这中间如果发生GC，就不用管标识为安全区域的线程了。 线程离开安全区域之前，需要确定自己已经完成了根节点枚举的过程，否则必须等待完成。</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://wfc1994.github.io/2019/07/07/编程练习/LeetCode练习/861. 翻转矩阵后的得分/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1968,256 +2282,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://wfc1994.github.io/2019/06/29/看书笔记/深入理解Java虚拟机/3、判断对象是否存活/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Wfc">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="只想当扫地机器人的老王">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2019/06/29/看书笔记/深入理解Java虚拟机/3、判断对象是否存活/" class="post-title-link" itemprop="url">3、判断对象是否存活</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-06-29 23:47:20 / 修改时间：23:46:52" itemprop="dateCreated datePublished" datetime="2019-06-29T23:47:20+08:00">2019-06-29</time>
-            
-
-            
-              
-
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/" itemprop="url" rel="index"><span itemprop="name">看书笔记</span></a></span>
-
-                
-                
-                  ，
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/看书笔记/深入理解Java虚拟机/" itemprop="url" rel="index"><span itemprop="name">深入理解Java虚拟机</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="1-判断方式与方法"><a href="#1-判断方式与方法" class="headerlink" title="1. 判断方式与方法"></a>1. 判断方式与方法</h2><p>垃圾收集器对 Java堆里的对象 是否进行回收的判断准则：</p>
-<p>Java对象是存活 or 死亡：判断对象为死亡才会进行回收</p>
-<p>在Java虚拟机中，判断对象是否存活有2种方法：</p>
-<ul>
-<li>引用计数法</li>
-<li>引用链法（可达性分析法）</li>
-</ul>
-<h3 id="1-1-引用计数法"><a href="#1-1-引用计数法" class="headerlink" title="1.1. 引用计数法"></a>1.1. 引用计数法</h3><h4 id="方法描述"><a href="#方法描述" class="headerlink" title="方法描述"></a>方法描述</h4><p>给 Java 对象添加一个引用计数器，每当有一个地方引用它时，计数器 +1；引用失效则 -1；</p>
-<h4 id="判断对象存活准则"><a href="#判断对象存活准则" class="headerlink" title="判断对象存活准则"></a>判断对象存活准则</h4><p>当计数器不为 0 时，判断该对象存活；否则判断为死亡（计数器 = 0）。</p>
-<h4 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h4><p>实现简单、判断高效</p>
-<h4 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h4><p>无法解决对象间<strong>相互循环引用</strong>的问题 : 即该算法存在判断逻辑的漏洞</p>
-<p>背景</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// 对象objA 和 objB 都有字段 name</span><br><span class="line">// 两个对象相互进行引用，除此之外这两个人对象没有任何引用</span><br><span class="line">objA.name = objB；</span><br><span class="line">objB.name = objA；</span><br></pre></td></tr></table></figure>
-
-<p>问题</p>
-<p>实际上这两个对象已经不可能再被访问，应该要被垃圾收集器进行回收</p>
-<p>但因为他们相互引用，所以导致计数器不为0，这导致引用计数算法无法通知垃圾收集器回收该两个对象</p>
-<p>++正由于该算法存在判断逻辑漏洞，所以Java虚拟机没有采用该算法判断Java是否存活++。</p>
-<h3 id="2-2、引用链法（可达性分析法）"><a href="#2-2、引用链法（可达性分析法）" class="headerlink" title="2.2、引用链法（可达性分析法）"></a>2.2、引用链法（可达性分析法）</h3><p>很多主流商用语言（如Java、C#）都采用引用链法判断Java对象是否存活。</p>
-<p>含3个步骤：</p>
-<ol>
-<li>可达性分</li>
-<li>析第一次标记 &amp; 筛选</li>
-<li>第二次标记 &amp; 筛选</li>
-</ol>
-<h4 id="2-2-1-可达性分析"><a href="#2-2-1-可达性分析" class="headerlink" title="2.2.1 可达性分析"></a>2.2.1 可达性分析</h4><p>方法描述</p>
-<p>将一系列的 GC Roots 对象作为起点，从这些起点开始向下搜索。</p>
-<p>可作为 GC Root 的对象有：</p>
-<ul>
-<li>Java虚拟机栈（栈帧的本地变量表）中引用的对象</li>
-<li>本地方法栈 中 JNI引用对象</li>
-<li>方法区 中常量、类静态属性引用的对象</li>
-</ul>
-<p>Java 进行GC的时候会从GC root进行可达性判断，常见的GC Root有如下：</p>
-<ol>
-<li>Class - 由系统类加载器(system class loader)加载的对象，这些类是不能够被回收的，他们可以以静态字段的方式保存持有其它对象。我们需要注意的一点就是，通过用户自定义的类加载器加载的类，除非相应的java.lang.Class实例以其它的某种（或多种）方式成为roots，否则它们并不是roots，.</li>
-<li>Thread - 活着的线程</li>
-<li>Stack Local - Java方法的local变量或参数</li>
-<li>JNI Local - JNI方法的local变量或参数</li>
-<li>JNI Global - 全局JNI引用</li>
-<li>Monitor Used - 用于同步的监控对象</li>
-<li>Held by JVM - 用于JVM特殊目的由GC保留的对象，但实际上这个与JVM的实现是有关的。可能已知的一些类型是：系统类加载器、一些JVM知道的重要的异常类、一些用于处理异常的预分配对象以及一些自定义的类加载器等。然而，JVM并没有为这些对象提供其它的信息，因此需要去确定哪些是属于”JVM持有”的了。</li>
-</ol>
-<p>向下搜索的路径 = 引用链</p>
-<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E7%9B%98%E5%AF%B9%E5%AF%B9%E8%B1%A1%E6%98%AF%E5%90%A6%E5%AD%98%E6%B4%BB1.png" alt></p>
-<p><strong>判断对象是否可达标准</strong></p>
-<p>当一个对象到 GC Roots没有任何引用链相连时，则判断该对象不可达，比如上图右边的形式。</p>
-<p>没有任何引用链相连 = GC Root到对象不可达 = 对象不可用</p>
-<p><strong>注意：Java9中已经明确弃用了finalize方法</strong></p>
-<p>为什么呢？简单说，你无法保证finalize什么时候执行，执行的是否符合预期。使用不当会影响 性能，导致程序死锁、挂起等。千万不要指望 finalize 去承担资源释放的主要职责，多让finalize作为后的“守门员”（也就是如下的行为两次标记筛选）</p>
-<p>++可达性分析 仅仅只是判断对象是否可达，但还不足以判断对象是否存活 / 死亡，++<br>当在 可达性分析 中判断不可达的对象，只是“被判刑” = 还没真正死亡<br>不可达对象会被放在”即将回收“的集合里。</p>
-<p>要判断一个对象真正死亡，还需要经历两个阶段：</p>
-<p>第一次标记 &amp; 筛选 finalize方法存在</p>
-<p>第二次标记 &amp; 筛选</p>
-<p><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%88%A4%E6%96%AD%E5%AF%B9%E8%B1%A1%E6%98%AF%E5%90%A6%E5%AD%98%E6%B4%BB2.png" alt></p>
-<h4 id="2-2-2-第一次标记-amp-筛选"><a href="#2-2-2-第一次标记-amp-筛选" class="headerlink" title="2.2.2 第一次标记 &amp; 筛选"></a>2.2.2 第一次标记 &amp; 筛选</h4><p>对象在可达性分析中被判断为不可达后，会被第一次标记 &amp; 准备被筛选</p>
-<p>方法描述</p>
-<ol>
-<li>不筛选：继续留在 ”即将回收“的集合里，等待回收；</li>
-<li>筛选：从 ”即将回收“的集合取出</li>
-</ol>
-<p>筛选标准</p>
-<ul>
-<li>该对象是否有必要执行 finalize()方法</li>
-<li>若有必要执行（人为设置），则筛选出来，进入下一阶段（第二次标记 &amp; 筛选）；</li>
-<li>若没必要执行，判断该对象死亡，不筛选 并等待回收</li>
-<li>当对象无 finalize()方法 或 finalize()已被虚拟机调用过，则视为“没必要执行”</li>
-</ul>
-<h4 id="2-2-3-第二次标记-amp-筛选"><a href="#2-2-3-第二次标记-amp-筛选" class="headerlink" title="2.2.3 第二次标记 &amp; 筛选"></a>2.2.3 第二次标记 &amp; 筛选</h4><p>当对象经过了第一次的标记 &amp; 筛选，会被进行第二次标记 &amp; 准备被进行 筛选</p>
-<p>方法描述</p>
-<p>该对象会被放到一个 F-Queue 队列中，并由 虚拟机自动建立、优先级低的Finalizer 线程去执行 队列中该对象的finalize()，finalize()只会被执行一次，但并不承诺等待finalize()运行结束。这是为了防止 finalize()执行缓慢 / 停止 使得 F-Queue队列其他对象永久等待。</p>
-<p>筛选标准</p>
-<p>在执行finalize()过程中，若对象依然没与引用链上的GC Roots直接关联或间接关联（即关联上与GC Roots 关联的对象），那么该对象将被判断死亡，不筛选（留在”即将回收“集合里）并等待回收</p>
-<h2 id="3、引用相关"><a href="#3、引用相关" class="headerlink" title="3、引用相关"></a>3、引用相关</h2><p>不管是引用计数还是可达性分析，都和引用有关。 Java中引用包括：</p>
-<h3 id="1、强引用"><a href="#1、强引用" class="headerlink" title="1、强引用"></a>1、强引用</h3><p>最普遍的引用，只要强引用存在，对象肯定不会被回收。</p>
-<p>++obj就是强引用。通过关键字new 创建的对象所关联的引用就是强引用++。 当JVM内存空间不足，JVM宁愿抛出OutOfMemory Error运行时错误（OOM），使程序异常终止，也不会靠随意回收具有强引用的“存活”对 象来解决内存不足的问题。对于一个普通的对象，如果没有其他的引用关系，只要超过了引 用的作用域或者显式地将相应（强）引用赋值为 null，就是可以被垃圾收集的了，具体回收 时机还是要看垃圾收集策略。</p>
-<h3 id="2、软引用"><a href="#2、软引用" class="headerlink" title="2、软引用"></a>2、软引用</h3><p>描述有用但并非必需的对象，当内存不足时，就会回收这些对象。Java中提供SoftReference类。 一般用于内存敏感的高速缓存中。</p>
-<p>图片缓存框架中，“内存缓存”中的图片是以这种引用来保存，使得JVM在发生 OOM之前，可以回收这部分缓存</p>
-<h3 id="3、弱引用"><a href="#3、弱引用" class="headerlink" title="3、弱引用"></a>3、弱引用</h3><p>描述非必需对象，强度比软引用更弱。在垃圾回收器线程扫描它所管辖的内存区域的过程中，一旦发现了只具有弱引用的对象，不管当前内存空间足够与否，都会回收它的内存。不过，由于垃圾回收器是一个优先级很低的线程，因此不一定会很快发现那些只具有弱引用的对象。Java中提供WeakReference类。</p>
-<p>在静态内部类中，经常会使用虚引用。例如，一个类发送网络请求，承担callbac k的静态内部类，则常以虚引用的方式来保存外部类(宿主类)的引用，当外部类需要被JVM回 收时，不会因为网络请求没有及时回来，导致外部类不能被回收，引起内存泄漏</p>
-<h4 id="4、虚引用"><a href="#4、虚引用" class="headerlink" title="4、虚引用"></a>4、虚引用</h4><p>又称幽灵引用或幻影引用，最弱的一种引用关系。虚引用对对象的生命周期不会有任何影响，不能通过虚引用取得对象的实例。唯一的目的是，设置虚引用的对象在被回收时会收到</p>
-<p>应用场景：可用来跟踪对象被垃圾回收器回收的活动，当一个虚引用关联的对象被垃圾收集 器回收之前会收到一条系统通知。</p>
-<p>这种引用的get()方法返回总是null，所以，可以想象，在平常的项目开发肯定 用的少。但是根据这种引用的特点，我想可以通过监控这类引用，来进行一些垃圾清理的动作。可以参考jdk内部cleaner使用<br><img src="https://raw.githubusercontent.com/wfc1994/Figurebed/master/img/%E5%88%A4%E6%96%AD%E5%AF%B9%E8%B1%A1%E6%98%AF%E5%90%A6%E5%AD%98%E6%B4%BB3.png" alt></p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2264,7 +2328,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">22</span>
+                    <span class="site-state-item-count">23</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
